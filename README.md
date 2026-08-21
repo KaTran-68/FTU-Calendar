@@ -24,7 +24,7 @@ This is a frontend-only project (React + Vite + TypeScript) with no backend — 
 ## Requirements
 
 - Node.js 20+
-- A Google Cloud OAuth Client ID (see the guide below)
+- A Google Cloud OAuth Client ID
 
 ## Install & run locally
 
@@ -34,20 +34,6 @@ cp .env.example .env
 # fill in VITE_GOOGLE_CLIENT_ID in .env
 npm run dev
 ```
-
-## Creating a Google OAuth Client ID
-
-1. Go to the [Google Cloud Console](https://console.cloud.google.com/) → create a new project (or use an existing one).
-2. Go to **APIs & Services → Library** and enable the **Google Calendar API**.
-3. Go to **APIs & Services → OAuth consent screen**, choose **External**, fill in the basic info, and add your email to the **Test users** list (while the app is in Testing mode, only these emails can sign in).
-4. Go to **APIs & Services → Credentials → Create Credentials → OAuth client ID**, and choose **Web application**.
-5. Under **Authorized JavaScript origins**, add:
-   - `http://localhost:5173` (for running the Vite dev server locally)
-   - your real domain if you deploy to static hosting (Vercel/Netlify/GitHub Pages…)
-6. Copy the generated **Client ID** into your `.env` file:
-   ```
-   VITE_GOOGLE_CLIENT_ID=xxxxxxxx.apps.googleusercontent.com
-   ```
 
 ## Scripts
 
