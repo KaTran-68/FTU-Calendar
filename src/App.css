@@ -4,6 +4,35 @@
   min-height: 100svh;
 }
 
+.app-background {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.app-background__logo {
+  position: absolute;
+  width: 460px;
+  max-width: 70vw;
+  height: auto;
+  opacity: 0.6;
+  filter: blur(2px);
+}
+
+.app-background__logo--ftu {
+  top: 10px;
+  left: -20px;
+  transform: rotate(-15deg);
+}
+
+.app-background__logo--hcmut {
+  bottom: -20px;
+  right: -40px;
+  transform: rotate(15deg);
+}
+
 .app-header {
   padding: 32px 16px 16px;
   text-align: center;

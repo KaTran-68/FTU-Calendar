@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import './App.css'
+import { BackgroundLogos } from './components/BackgroundLogos'
 import { CalendarConfigStep } from './components/CalendarConfigStep'
 import { Footer } from './components/Footer'
 import { Header } from './components/Header'
@@ -12,6 +13,7 @@ function App() {
 
   return (
     <div className="app">
+      <BackgroundLogos />
       <Header />
       <main className="app-main">
         <div className="app-panel">
