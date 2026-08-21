@@ -87,6 +87,20 @@ describe('CalendarConfigStep', () => {
     expect(eventAfter.style.backgroundColor).not.toBe(colorBefore)
   })
 
+  it('tự chọn màu riêng cho 1 môn nhưng vẫn đổi khi bấm Đổi màu ngẫu nhiên', () => {
+    render(<CalendarConfigStep schedule={schedule} onBack={vi.fn()} />)
+
+    fireEvent.click(screen.getByText('Nhập môn kiểm thử'))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Tomato' }))
+
+    const event = screen.getByText('Nhập môn kiểm thử')
+    expect(event.style.backgroundColor).toBe('rgb(214, 0, 0)')
+
+    fireEvent.click(screen.getByRole('button', { name: /đổi màu/i }))
+
+    expect(screen.getByText('Nhập môn kiểm thử').style.backgroundColor).not.toBe('rgb(214, 0, 0)')
+  })
+
   it('báo lỗi khi tên calendar rỗng', () => {
     render(<CalendarConfigStep schedule={schedule} onBack={vi.fn()} />)
 

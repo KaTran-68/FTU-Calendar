@@ -31,6 +31,7 @@ export function CalendarConfigStep({
   const [calendarName, setCalendarName] = useState(calendarSummaryForSemester(schedule.semester))
   const [reminderMinutes, setReminderMinutes] = useState(45)
   const [colorOrder, setColorOrder] = useState<string[]>(EVENT_COLOR_IDS)
+  const [colorOverrides, setColorOverrides] = useState<Record<string, string>>({})
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [status, setStatus] = useState<Status>('idle')
   const [progress, setProgress] = useState<PushProgress | null>(null)
@@ -44,10 +45,13 @@ export function CalendarConfigStep({
     return Array.from(seen, ([code, name]) => ({ code, name }))
   }, [schedule])
 
-  const colorMap = useMemo(
-    () => buildSubjectColorMap(schedule.sessions, colorOrder),
-    [schedule, colorOrder],
-  )
+  const colorMap = useMemo(() => {
+    const map = buildSubjectColorMap(schedule.sessions, colorOrder)
+    for (const [subjectCode, colorId] of Object.entries(colorOverrides)) {
+      map.set(subjectCode, colorId)
+    }
+    return map
+  }, [schedule, colorOrder, colorOverrides])
 
   async function handleConfirm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -121,7 +125,13 @@ export function CalendarConfigStep({
       <ColorPreview
         subjects={subjects}
         colorMap={colorMap}
-        onShuffle={() => setColorOrder(shuffleColorOrder(colorOrder))}
+        onShuffle={() => {
+          setColorOrder(shuffleColorOrder(colorOrder))
+          setColorOverrides({})
+        }}
+        onColorChange={(subjectCode, colorId) =>
+          setColorOverrides((prev) => ({ ...prev, [subjectCode]: colorId }))
+        }
       />
 
       <button type="submit" disabled={status !== 'idle'}>

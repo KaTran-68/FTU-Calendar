@@ -111,6 +111,7 @@
 }
 
 .color-preview {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -121,6 +122,12 @@
 
 .color-preview__label {
   font-weight: 600;
+}
+
+.color-preview__hint {
+  margin: 0;
+  font-size: 12px;
+  color: #70757a;
 }
 
 .color-preview__grid {
@@ -164,15 +171,54 @@
 }
 
 .color-preview__event {
+  display: block;
+  width: 100%;
   height: 100%;
   padding: 2px 8px;
+  border: none;
   border-radius: 4px;
   color: #fff;
+  font: inherit;
   font-size: 13px;
   font-weight: 500;
+  text-align: left;
+  cursor: pointer;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.color-preview__palette {
+  position: absolute;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+}
+
+.color-preview__palette-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.color-preview__palette-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.color-preview__swatch-option {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 0;
+  cursor: pointer;
 }
 
 .color-preview__shuffle {
