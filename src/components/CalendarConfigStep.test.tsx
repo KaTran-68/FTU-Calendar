@@ -78,13 +78,13 @@ describe('CalendarConfigStep', () => {
 
   it('đổi màu khi bấm nút Đổi màu', () => {
     const { container } = render(<CalendarConfigStep schedule={schedule} onBack={vi.fn()} />)
-    const swatchBefore = container.querySelector('.color-preview__swatch') as HTMLElement
-    const colorBefore = swatchBefore.style.backgroundColor
+    const eventBefore = container.querySelector('.color-preview__event') as HTMLElement
+    const colorBefore = eventBefore.style.backgroundColor
 
     fireEvent.click(screen.getByRole('button', { name: /đổi màu/i }))
 
-    const swatchAfter = container.querySelector('.color-preview__swatch') as HTMLElement
-    expect(swatchAfter.style.backgroundColor).not.toBe(colorBefore)
+    const eventAfter = container.querySelector('.color-preview__event') as HTMLElement
+    expect(eventAfter.style.backgroundColor).not.toBe(colorBefore)
   })
 
   it('báo lỗi khi tên calendar rỗng', () => {
