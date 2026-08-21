@@ -1,5 +1,3 @@
-/** Kiểu dữ liệu thô trả về từ cổng thông tin FTU (chỉ khai báo các field parser sử dụng). */
-
 export interface RawPeriod {
   tiet: number
   gio_bat_dau: string
@@ -33,7 +31,6 @@ export interface RawScheduleResponse {
   }
 }
 
-/** Một buổi học cụ thể, đã được chuẩn hoá để đưa lên Google Calendar. */
 export interface ClassSession {
   id: string
   subjectCode: string
@@ -41,11 +38,8 @@ export interface ClassSession {
   room: string
   className: string
   group: string
-  /** YYYY-MM-DD */
   date: string
-  /** HH:mm */
   startTime: string
-  /** HH:mm */
   endTime: string
 }
 

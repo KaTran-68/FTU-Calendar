@@ -1,11 +1,17 @@
 import './App.css'
+import { Footer } from './components/Footer'
+import { Header } from './components/Header'
+import { ScheduleForm } from './components/ScheduleForm'
 
 function App() {
   return (
-    <main className="scaffold-placeholder">
-      <h1>FTU2 Calendar</h1>
-      <p>Scaffold sẵn sàng — giao diện thật sẽ được xây ở giai đoạn tiếp theo.</p>
-    </main>
+    <div className="app">
+      <Header />
+      <main className="app-main">
+        <ScheduleForm />
+      </main>
+      <Footer />
+    </div>
   )
 }
 

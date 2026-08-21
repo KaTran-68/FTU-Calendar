@@ -21,7 +21,6 @@ function buildPeriodMap(periods: RawPeriod[]): Map<number, { start: string; end:
   return map
 }
 
-/** "PH.A206-PH.A206" -> "PH.A206" */
 function dedupeRoom(raw: string): string {
   return raw.split('-')[0].trim()
 }
