@@ -1,5 +1,4 @@
 import axios, { type AxiosInstance } from 'axios'
-import { buildSubjectColorMap } from './colors'
 import type { ClassSession } from '../types/schedule'
 
 const CALENDAR_API_BASE = 'https://www.googleapis.com/calendar/v3'
@@ -149,11 +148,11 @@ export async function pushSessionsToGoogleCalendar(
   calendarId: string,
   sessions: ClassSession[],
   reminderMinutes: number,
+  colorMap: Map<string, string>,
   onProgress?: (progress: PushProgress) => void,
 ): Promise<PushProgress> {
   const client = createClient(accessToken)
   const existingFtuIds = await fetchExistingFtuIds(client, calendarId)
-  const colorMap = buildSubjectColorMap(sessions)
 
   const progress: PushProgress = { total: sessions.length, created: 0, skipped: 0, failed: 0 }
 

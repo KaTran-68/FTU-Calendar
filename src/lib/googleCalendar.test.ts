@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { buildSubjectColorMap } from './colors'
 import {
   calendarSummaryForSemester,
   ensureCalendar,
@@ -71,7 +72,8 @@ describe('pushSessionsToGoogleCalendar', () => {
     const post = vi.fn().mockResolvedValue({ data: {} })
     vi.spyOn(axios, 'create').mockReturnValue({ get, post } as never)
 
-    const progress = await pushSessionsToGoogleCalendar('token', 'cal-1', sessions, 45)
+    const colorMap = buildSubjectColorMap(sessions)
+    const progress = await pushSessionsToGoogleCalendar('token', 'cal-1', sessions, 45, colorMap)
 
     expect(progress).toEqual({ total: 2, created: 1, skipped: 1, failed: 0 })
     expect(post).toHaveBeenCalledTimes(1)
@@ -100,7 +102,8 @@ describe('pushSessionsToGoogleCalendar', () => {
     const post = vi.fn().mockRejectedValueOnce(rateLimitError).mockResolvedValueOnce({ data: {} })
     vi.spyOn(axios, 'create').mockReturnValue({ get, post } as never)
 
-    const progress = await pushSessionsToGoogleCalendar('token', 'cal-1', sessions, 45)
+    const colorMap = buildSubjectColorMap(sessions)
+    const progress = await pushSessionsToGoogleCalendar('token', 'cal-1', sessions, 45, colorMap)
 
     expect(progress).toEqual({ total: 1, created: 1, skipped: 0, failed: 0 })
     expect(post).toHaveBeenCalledTimes(2)
@@ -117,7 +120,8 @@ describe('pushSessionsToGoogleCalendar', () => {
     const post = vi.fn().mockRejectedValue(permanentError)
     vi.spyOn(axios, 'create').mockReturnValue({ get, post } as never)
 
-    const progress = await pushSessionsToGoogleCalendar('token', 'cal-1', sessions, 45)
+    const colorMap = buildSubjectColorMap(sessions)
+    const progress = await pushSessionsToGoogleCalendar('token', 'cal-1', sessions, 45, colorMap)
 
     expect(progress).toEqual({ total: 1, created: 0, skipped: 0, failed: 1 })
     expect(post).toHaveBeenCalledTimes(1)

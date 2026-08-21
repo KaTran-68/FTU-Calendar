@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildSubjectColorMap } from './colors'
+import { buildSubjectColorMap, EVENT_COLOR_IDS, shuffleColorOrder } from './colors'
 import type { ClassSession } from '../types/schedule'
 
 function sessionWithSubject(subjectCode: string): ClassSession {
@@ -33,5 +33,29 @@ describe('buildSubjectColorMap', () => {
     expect(colorMap.get('SUB0')).toBe('1')
     expect(colorMap.get('SUB10')).toBe('11')
     expect(colorMap.get('SUB11')).toBe('1')
+  })
+
+  it('dùng thứ tự màu tuỳ chỉnh khi được truyền vào', () => {
+    const sessions = ['A', 'B'].map(sessionWithSubject)
+    const colorMap = buildSubjectColorMap(sessions, ['7', '3'])
+
+    expect(colorMap.get('A')).toBe('7')
+    expect(colorMap.get('B')).toBe('3')
+  })
+})
+
+describe('shuffleColorOrder', () => {
+  it('trả về mảng có đúng các phần tử ban đầu, chỉ đổi thứ tự', () => {
+    const shuffled = shuffleColorOrder()
+
+    expect(shuffled).toHaveLength(EVENT_COLOR_IDS.length)
+    expect([...shuffled].sort()).toEqual([...EVENT_COLOR_IDS].sort())
+  })
+
+  it('không chỉnh sửa mảng gốc truyền vào', () => {
+    const original = [...EVENT_COLOR_IDS]
+    shuffleColorOrder(original)
+
+    expect(original).toEqual(EVENT_COLOR_IDS)
   })
 })

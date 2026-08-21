@@ -1,20 +1,29 @@
 import { useState } from 'react'
 import './App.css'
+import { CalendarConfigStep } from './components/CalendarConfigStep'
 import { Footer } from './components/Footer'
-import { GoogleSignIn } from './components/GoogleSignIn'
 import { Header } from './components/Header'
-import { ScheduleForm } from './components/ScheduleForm'
+import { ScheduleInputStep } from './components/ScheduleInputStep'
+import type { ParsedSchedule } from './types/schedule'
 
 function App() {
-  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [rawData, setRawData] = useState('')
+  const [schedule, setSchedule] = useState<ParsedSchedule | null>(null)
 
   return (
     <div className="app">
       <Header />
       <main className="app-main">
         <div className="app-panel">
-          <GoogleSignIn onConnected={setAccessToken} />
-          <ScheduleForm accessToken={accessToken} />
+          {schedule ? (
+            <CalendarConfigStep schedule={schedule} onBack={() => setSchedule(null)} />
+          ) : (
+            <ScheduleInputStep
+              rawData={rawData}
+              onRawDataChange={setRawData}
+              onParsed={setSchedule}
+            />
+          )}
         </div>
       </main>
       <Footer />
