@@ -6,10 +6,11 @@ This is a frontend-only project (React + Vite + TypeScript) with no backend — 
 
 ## Features
 
-- Paste the schedule JSON → preview how many class sessions and subjects were read.
+- Sign in with Google, paste the schedule JSON, and push the whole semester onto your calendar in one click.
 - Choose how many minutes before each class you want to be reminded (e.g. 45 minutes).
 - Creates a dedicated Google Calendar (named `HK-<semester code>`, e.g. `HK-20261`) and pushes every session into it — kept separate from your personal calendar.
 - Each subject gets its own color.
+- Shows live progress as events are created.
 - Running it again with the same data won't create duplicate events.
 
 ## How to get the schedule data
@@ -34,6 +35,19 @@ cp .env.example .env
 # fill in VITE_GOOGLE_CLIENT_ID in .env
 npm run dev
 ```
+
+## Deployment
+
+This is a static site (no backend), so any static host works: Vercel, Netlify, GitHub Pages, Cloudflare Pages, etc.
+
+```bash
+npm run build
+```
+
+This produces a `dist/` folder ready to deploy. Whichever host you use:
+
+1. Set the `VITE_GOOGLE_CLIENT_ID` environment variable in your host's project settings (same value as in your local `.env`).
+2. Add the deployed URL (e.g. `https://ftu2-calendar.vercel.app`) to **Authorized JavaScript origins** on your OAuth Client ID in the [Google Cloud Console](https://console.cloud.google.com/), otherwise Google sign-in will fail on the live site.
 
 ## Scripts
 
