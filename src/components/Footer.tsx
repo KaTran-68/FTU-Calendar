@@ -1,7 +1,20 @@
+import { FaLinkedin } from 'react-icons/fa6'
+import { FiMail } from 'react-icons/fi'
+
 export function Footer() {
   return (
     <footer className="app-footer">
-      <p>Made by Ka, for Bống.</p>
+      <p className="app-footer__year">© 2026 FTU2 Calendar</p>
+      <div className="app-footer__links">
+        <a href="mailto:tkhoa06082005@gmail.com">
+          <FiMail aria-hidden="true" />
+          tkhoa06082005@gmail.com
+        </a>
+        <a href="https://www.linkedin.com/in/katran68" target="_blank" rel="noopener noreferrer">
+          <FaLinkedin aria-hidden="true" />
+          LinkedIn
+        </a>
+      </div>
     </footer>
   )
 }

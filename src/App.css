@@ -46,6 +46,12 @@
   letter-spacing: -0.5px;
 }
 
+.app-header__credit {
+  margin: 6px 0 0;
+  color: #1565c0;
+  font-weight: 600;
+}
+
 .app-main {
   flex: 1;
   display: flex;
@@ -277,8 +283,32 @@
 .app-footer {
   padding: 16px;
   text-align: center;
+  color: #70757a;
+  font-size: 13px;
+}
+
+.app-footer__year {
+  margin: 0 0 6px;
+}
+
+.app-footer__links {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.app-footer__links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: #1565c0;
   font-weight: 600;
+  text-decoration: none;
+}
+
+.app-footer__links a:hover {
+  text-decoration: underline;
 }
 
 @media (max-width: 480px) {
