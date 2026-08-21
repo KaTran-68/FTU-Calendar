@@ -1,50 +1,50 @@
 # FTU2 Calendar
 
-Ứng dụng web giúp sinh viên FTU2 dán (paste) dữ liệu thời khoá biểu lấy từ cổng thông tin sinh viên và tự động tạo toàn bộ lịch học lên Google Calendar cá nhân — mỗi môn một màu, kèm nhắc nhở trước giờ học theo số phút tự chọn.
+A web app that lets FTU2 students paste the class schedule data pulled from the student portal and automatically push the whole semester onto their personal Google Calendar — one color per subject, with a reminder set to fire a chosen number of minutes before each class.
 
-Đây là dự án frontend-only (React + Vite + TypeScript), không có backend — mọi thao tác với Google Calendar được gọi thẳng từ trình duyệt bằng OAuth (Google Identity Services), không có server nào giữ dữ liệu hay access token của bạn.
+This is a frontend-only project (React + Vite + TypeScript) with no backend — every call to Google Calendar is made straight from the browser via OAuth (Google Identity Services). No server ever holds your data or access token.
 
-## Tính năng
+## Features
 
-- Dán JSON thời khoá biểu → xem trước số buổi học / số môn đã đọc được.
-- Chọn số phút muốn được nhắc trước mỗi buổi học (ví dụ 45 phút).
-- Tạo một calendar riêng trên Google Calendar (tên `HK-<mã học kỳ>`, ví dụ `HK-20261`) và đẩy toàn bộ buổi học vào đó — không lẫn với lịch cá nhân.
-- Mỗi môn học được gán một màu riêng.
-- Chạy lại nhiều lần với cùng dữ liệu không bị tạo trùng sự kiện.
+- Paste the schedule JSON → preview how many class sessions and subjects were read.
+- Choose how many minutes before each class you want to be reminded (e.g. 45 minutes).
+- Creates a dedicated Google Calendar (named `HK-<semester code>`, e.g. `HK-20261`) and pushes every session into it — kept separate from your personal calendar.
+- Each subject gets its own color.
+- Running it again with the same data won't create duplicate events.
 
-## Cách lấy dữ liệu thời khoá biểu
+## How to get the schedule data
 
-1. Đăng nhập cổng thông tin sinh viên FTU2, mở trang thời khoá biểu.
-2. Mở DevTools (F12) → tab Network, tải lại trang thời khoá biểu.
-3. Tìm request trả về JSON thời khoá biểu (dạng `{ "data": { "ds_tiet_trong_ngay": [...], "ds_tuan_tkb": [...] }, ... }`), copy toàn bộ nội dung response.
-4. Dán vào ô nhập liệu trên trang FTU2 Calendar.
+1. Log in to the FTU2 student portal and open the schedule (thời khoá biểu) page.
+2. Open DevTools (F12) → the Network tab, then reload the schedule page.
+3. Find the request that returns the schedule JSON (shaped like `{ "data": { "ds_tiet_trong_ngay": [...], "ds_tuan_tkb": [...] }, ... }`) and copy the full response body.
+4. Paste it into the input field on the FTU2 Calendar page.
 
-> Dữ liệu này chỉ được xử lý trong trình duyệt của bạn, không được gửi đi đâu ngoài Google Calendar API.
+> This data is only ever processed in your browser — it's never sent anywhere except the Google Calendar API.
 
-## Yêu cầu môi trường
+## Requirements
 
 - Node.js 20+
-- Một Google Cloud OAuth Client ID (xem hướng dẫn bên dưới)
+- A Google Cloud OAuth Client ID (see the guide below)
 
-## Cài đặt & chạy local
+## Install & run locally
 
 ```bash
 npm install
 cp .env.example .env
-# điền VITE_GOOGLE_CLIENT_ID vào .env
+# fill in VITE_GOOGLE_CLIENT_ID in .env
 npm run dev
 ```
 
-## Tạo Google OAuth Client ID
+## Creating a Google OAuth Client ID
 
-1. Vào [Google Cloud Console](https://console.cloud.google.com/) → tạo project mới (hoặc dùng project có sẵn).
-2. Vào **APIs & Services → Library**, bật **Google Calendar API**.
-3. Vào **APIs & Services → OAuth consent screen**, chọn loại **External**, điền thông tin cơ bản, thêm email của bạn vào danh sách **Test users** (app ở chế độ Testing chỉ đăng nhập được bằng các email này).
-4. Vào **APIs & Services → Credentials → Create Credentials → OAuth client ID**, chọn **Web application**.
-5. Ở mục **Authorized JavaScript origins**, thêm:
-   - `http://localhost:5173` (chạy local với Vite dev server)
-   - domain thật nếu bạn deploy lên hosting tĩnh (Vercel/Netlify/GitHub Pages...)
-6. Copy **Client ID** vừa tạo vào file `.env`:
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/) → create a new project (or use an existing one).
+2. Go to **APIs & Services → Library** and enable the **Google Calendar API**.
+3. Go to **APIs & Services → OAuth consent screen**, choose **External**, fill in the basic info, and add your email to the **Test users** list (while the app is in Testing mode, only these emails can sign in).
+4. Go to **APIs & Services → Credentials → Create Credentials → OAuth client ID**, and choose **Web application**.
+5. Under **Authorized JavaScript origins**, add:
+   - `http://localhost:5173` (for running the Vite dev server locally)
+   - your real domain if you deploy to static hosting (Vercel/Netlify/GitHub Pages…)
+6. Copy the generated **Client ID** into your `.env` file:
    ```
    VITE_GOOGLE_CLIENT_ID=xxxxxxxx.apps.googleusercontent.com
    ```
@@ -52,25 +52,28 @@ npm run dev
 ## Scripts
 
 ```bash
-npm run dev        # chạy dev server
-npm run build       # build production
-npm run preview     # xem thử bản build
-npm run lint         # kiểm tra ESLint
-npm run typecheck   # kiểm tra kiểu TypeScript
-npm test            # chạy unit test (Vitest)
+npm run dev            # start the dev server
+npm run build           # production build
+npm run preview         # preview the production build
+npm run lint             # run ESLint
+npm run format           # format the codebase with Prettier
+npm run format:check    # check formatting without writing
+npm run typecheck       # run the TypeScript compiler
+npm test                # run unit tests once (Vitest)
+npm run test:watch      # run unit tests in watch mode
 ```
 
-## Công nghệ sử dụng
+## Tech stack
 
 - [React](https://react.dev/) + [Vite](https://vitejs.dev/) + TypeScript
-- [Axios](https://axios-http.com/) để gọi Google Calendar API
+- [Axios](https://axios-http.com/) for calling the Google Calendar API
 - [React Icons](https://react-icons.github.io/react-icons/)
 - [Vitest](https://vitest.dev/) + Testing Library
 
-## Ghi chú riêng tư
+## Privacy notes
 
-- File dữ liệu thời khoá biểu cá nhân (`sample_data.txt` hoặc tương tự) không được commit vào repo — đã thêm vào `.gitignore`.
-- Access token của Google chỉ được giữ trong bộ nhớ của trình duyệt (không lưu `localStorage`), mất khi tải lại trang.
+- Personal schedule data files (`sample_data.txt` or similar) are never committed to the repo — already covered by `.gitignore`.
+- Your Google access token only lives in browser memory (never written to `localStorage`) and is gone on page reload.
 
 ---
 
