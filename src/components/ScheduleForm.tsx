@@ -1,21 +1,34 @@
 import { useState, type FormEvent } from 'react'
 import { FiCalendar } from 'react-icons/fi'
+import {
+  calendarSummaryForSemester,
+  ensureCalendar,
+  pushSessionsToGoogleCalendar,
+  type PushProgress,
+} from '../lib/googleCalendar'
 import { parseSchedule } from '../lib/parseSchedule'
-import type { ParsedSchedule } from '../types/schedule'
+import { ProgressPanel } from './ProgressPanel'
 
 const MIN_REMINDER_MINUTES = 0
 const MAX_REMINDER_MINUTES = 40320
 
-export function ScheduleForm() {
+interface ScheduleFormProps {
+  accessToken: string | null
+}
+
+export function ScheduleForm({ accessToken }: ScheduleFormProps) {
   const [rawData, setRawData] = useState('')
   const [reminderMinutes, setReminderMinutes] = useState(45)
-  const [result, setResult] = useState<ParsedSchedule | null>(null)
+  const [semester, setSemester] = useState<string | null>(null)
+  const [progress, setProgress] = useState<PushProgress | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setResult(null)
     setError(null)
+    setProgress(null)
+    setSemester(null)
 
     if (!rawData.trim()) {
       setError('Vui lòng dán dữ liệu thời khoá biểu trước.')
@@ -25,15 +38,40 @@ export function ScheduleForm() {
       setError(`Số phút nhắc phải từ ${MIN_REMINDER_MINUTES} đến ${MAX_REMINDER_MINUTES}.`)
       return
     }
+    if (!accessToken) {
+      setError('Vui lòng đăng nhập Google trước khi tạo lịch.')
+      return
+    }
 
+    let parsed
     try {
-      setResult(parseSchedule(rawData))
+      parsed = parseSchedule(rawData)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đã có lỗi không xác định khi đọc dữ liệu.')
+      return
+    }
+    setSemester(parsed.semester)
+
+    setIsSubmitting(true)
+    try {
+      const calendarId = await ensureCalendar(
+        accessToken,
+        calendarSummaryForSemester(parsed.semester),
+      )
+      const finalProgress = await pushSessionsToGoogleCalendar(
+        accessToken,
+        calendarId,
+        parsed.sessions,
+        reminderMinutes,
+        setProgress,
+      )
+      setProgress(finalProgress)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Đưa lịch lên Google Calendar thất bại.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
-
-  const subjectCount = result ? new Set(result.sessions.map((s) => s.subjectCode)).size : 0
 
   return (
     <form className="schedule-form" onSubmit={handleSubmit} noValidate>
@@ -56,9 +94,9 @@ export function ScheduleForm() {
         onChange={(event) => setReminderMinutes(Number(event.target.value))}
       />
 
-      <button type="submit">
+      <button type="submit" disabled={isSubmitting}>
         <FiCalendar aria-hidden="true" />
-        Tạo lịch
+        {isSubmitting ? 'Đang tạo lịch...' : 'Tạo lịch'}
       </button>
 
       {error && (
@@ -66,12 +104,7 @@ export function ScheduleForm() {
           {error}
         </p>
       )}
-      {result && (
-        <p className="schedule-form__result">
-          Đã đọc {result.sessions.length} buổi học của {subjectCount} môn (học kỳ {result.semester}
-          ).
-        </p>
-      )}
+      {progress && semester && <ProgressPanel progress={progress} semester={semester} />}
     </form>
   )
 }

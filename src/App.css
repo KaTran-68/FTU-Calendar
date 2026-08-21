@@ -124,12 +124,17 @@
   background: #b71c1c;
 }
 
+.schedule-form button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .schedule-form__error {
   color: #b71c1c;
   font-weight: 600;
 }
 
-.schedule-form__result {
+.progress-panel {
   color: #1565c0;
   font-weight: 600;
 }
