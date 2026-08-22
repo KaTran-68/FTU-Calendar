@@ -8,7 +8,6 @@ import { ScheduleInputStep } from './components/ScheduleInputStep'
 import type { ParsedSchedule } from './types/schedule'
 
 function App() {
-  const [rawData, setRawData] = useState('')
   const [schedule, setSchedule] = useState<ParsedSchedule | null>(null)
 
   return (
@@ -20,11 +19,7 @@ function App() {
           {schedule ? (
             <CalendarConfigStep schedule={schedule} onBack={() => setSchedule(null)} />
           ) : (
-            <ScheduleInputStep
-              rawData={rawData}
-              onRawDataChange={setRawData}
-              onParsed={setSchedule}
-            />
+            <ScheduleInputStep onParsed={setSchedule} />
           )}
         </div>
       </main>
