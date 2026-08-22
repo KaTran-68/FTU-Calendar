@@ -82,4 +82,20 @@ describe('ScheduleInputStep', () => {
     expect(screen.queryByText('tkb.xlsx')).not.toBeInTheDocument()
     expect(screen.getByText(/kéo thả file/i)).toBeInTheDocument()
   })
+
+  it('mở modal hướng dẫn khi bấm nút Hướng dẫn, đóng lại khi bấm Đã hiểu', () => {
+    render(<ScheduleInputStep onParsed={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole('button', { name: /hướng dẫn/i }))
+
+    expect(screen.getByText(/cách lấy file excel/i)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /ftugate/i })).toHaveAttribute(
+      'href',
+      'https://ftugate.ftu.edu.vn/#/',
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /đã hiểu/i }))
+
+    expect(screen.queryByText(/cách lấy file excel/i)).not.toBeInTheDocument()
+  })
 })

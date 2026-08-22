@@ -1,5 +1,6 @@
 import { useState, type DragEvent, type FormEvent } from 'react'
-import { FiCalendar, FiFileText, FiUpload, FiX } from 'react-icons/fi'
+import { FiCalendar, FiFileText, FiHelpCircle, FiUpload, FiX } from 'react-icons/fi'
+import { Modal } from './Modal'
 import { parseScheduleExcelFile } from '../lib/parseScheduleExcel'
 import type { ParsedSchedule } from '../types/schedule'
 
@@ -18,6 +19,7 @@ export function ScheduleInputStep({ onParsed }: ScheduleInputStepProps) {
   const [isDragActive, setIsDragActive] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isParsing, setIsParsing] = useState(false)
+  const [isGuideOpen, setIsGuideOpen] = useState(false)
 
   function handleDragOver(event: DragEvent<HTMLElement>) {
     event.preventDefault()
@@ -58,10 +60,16 @@ export function ScheduleInputStep({ onParsed }: ScheduleInputStepProps) {
   return (
     <form className="wizard-form" onSubmit={handleSubmit} noValidate>
       <div className="field">
-        <label>
-          <FiUpload aria-hidden="true" />
-          File Excel thời khoá biểu
-        </label>
+        <div className="field__header">
+          <label>
+            <FiUpload aria-hidden="true" />
+            File Excel thời khoá biểu
+          </label>
+          <button type="button" className="field__guide-btn" onClick={() => setIsGuideOpen(true)}>
+            <FiHelpCircle aria-hidden="true" />
+            Hướng dẫn
+          </button>
+        </div>
         {file ? (
           <div
             className={`file-chip${isDragActive ? ' file-chip--active' : ''}`}
@@ -121,6 +129,40 @@ export function ScheduleInputStep({ onParsed }: ScheduleInputStepProps) {
         <p role="alert" className="wizard-form__error">
           {error}
         </p>
+      )}
+
+      {isGuideOpen && (
+        <Modal onClose={() => setIsGuideOpen(false)}>
+          <div className="guide-modal">
+            <h2 className="guide-modal__title">Cách lấy file Excel thời khoá biểu</h2>
+            <ol className="guide-modal__steps">
+              <li>
+                Đăng nhập vào{' '}
+                <a href="https://ftugate.ftu.edu.vn/#/" target="_blank" rel="noopener noreferrer">
+                  FtuGate
+                </a>
+                .
+              </li>
+              <li>
+                Vào phần <strong>Thời khóa biểu dạng học kỳ</strong> ở thanh menu bên trái.
+              </li>
+              <li>
+                Chọn loại Thời khóa biểu và Học kỳ bạn mong muốn (ví dụ: Học kỳ 1 - Năm học 2026 -
+                2027 và Thời khóa biểu lớp sinh viên).
+              </li>
+              <li>
+                Chọn <strong>"Xuất Excel"</strong> để tải file Excel về.
+              </li>
+            </ol>
+            <button
+              type="button"
+              className="guide-modal__close"
+              onClick={() => setIsGuideOpen(false)}
+            >
+              Đã hiểu
+            </button>
+          </div>
+        </Modal>
       )}
     </form>
   )

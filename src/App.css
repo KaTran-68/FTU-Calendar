@@ -97,6 +97,78 @@
   margin-top: 12px;
 }
 
+.field__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.field__guide-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--color-blue);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.field__guide-btn:hover {
+  color: var(--color-blue-dark);
+  text-decoration: underline;
+}
+
+.guide-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.guide-modal__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.guide-modal__steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-ink);
+}
+
+.guide-modal__steps a {
+  color: var(--color-blue);
+  font-weight: 700;
+}
+
+.guide-modal__close {
+  align-self: flex-end;
+  margin-top: 4px;
+  padding: 9px 20px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--color-red);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.guide-modal__close:hover {
+  background: var(--color-red-dark);
+}
+
 .file-drop {
   display: flex;
   flex-direction: column;
@@ -676,6 +748,11 @@
 .app-footer__year {
   margin: 0 0 10px;
   font-weight: 600;
+}
+
+.app-footer__note {
+  margin: 0 0 10px;
+  font-size: 12px;
 }
 
 .app-footer__links {
