@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { FiCalendar } from 'react-icons/fi'
+import { FiCalendar, FiFileText } from 'react-icons/fi'
 import { parseSchedule } from '../lib/parseSchedule'
 import type { ParsedSchedule } from '../types/schedule'
 
@@ -30,14 +30,19 @@ export function ScheduleInputStep({ rawData, onRawDataChange, onParsed }: Schedu
 
   return (
     <form className="wizard-form" onSubmit={handleSubmit} noValidate>
-      <label htmlFor="schedule-data">Dữ liệu thời khoá biểu</label>
-      <textarea
-        id="schedule-data"
-        value={rawData}
-        onChange={(event) => onRawDataChange(event.target.value)}
-        placeholder="Dán nội dung JSON thời khoá biểu vào đây..."
-        rows={10}
-      />
+      <div className="field">
+        <label htmlFor="schedule-data">
+          <FiFileText aria-hidden="true" />
+          Dữ liệu thời khoá biểu
+        </label>
+        <textarea
+          id="schedule-data"
+          value={rawData}
+          onChange={(event) => onRawDataChange(event.target.value)}
+          placeholder="Dán nội dung JSON thời khoá biểu vào đây..."
+          rows={10}
+        />
+      </div>
 
       <button type="submit">
         <FiCalendar aria-hidden="true" />

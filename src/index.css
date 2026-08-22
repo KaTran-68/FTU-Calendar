@@ -1,6 +1,32 @@
 :root {
   color-scheme: light;
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --color-red: #e5342e;
+  --color-red-dark: #b71c1c;
+  --color-red-light: #ff6f5e;
+  --color-blue: #1565c0;
+  --color-blue-dark: #0d3f8c;
+  --color-blue-light: #4b9fe8;
+  --color-ink: #1c2230;
+  --color-muted: #6b7280;
+  --color-border: #e2e5ec;
+  --color-surface: #ffffff;
+  --gradient-brand: linear-gradient(
+    135deg,
+    var(--color-red) 0%,
+    #d9436b 45%,
+    var(--color-blue) 100%
+  );
+  --gradient-page:
+    radial-gradient(1200px 600px at 8% -10%, rgba(229, 52, 46, 0.14), transparent 60%),
+    radial-gradient(1000px 700px at 100% 10%, rgba(21, 101, 192, 0.16), transparent 55%),
+    radial-gradient(900px 600px at 20% 110%, rgba(21, 101, 192, 0.1), transparent 55%), #f6f7fb;
+  --shadow-sm: 0 1px 2px rgba(28, 34, 48, 0.06);
+  --shadow-md: 0 8px 24px rgba(28, 34, 48, 0.08);
+  --shadow-lg: 0 16px 40px rgba(28, 34, 48, 0.14);
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  font-family: 'Plus Jakarta Sans', system-ui, 'Segoe UI', Roboto, sans-serif;
 }
 
 * {
@@ -9,6 +35,7 @@
 
 body {
   margin: 0;
-  background: #ffffff;
-  color: #1a1a1a;
+  min-height: 100svh;
+  background: var(--gradient-page);
+  color: var(--color-ink);
 }

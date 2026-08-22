@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { FiShuffle } from 'react-icons/fi'
+import { FiEye, FiShuffle } from 'react-icons/fi'
 import { EVENT_COLOR_HEX, EVENT_COLOR_IDS, EVENT_COLOR_NAMES } from '../lib/colors'
 
 interface ColorPreviewProps {
@@ -46,7 +46,10 @@ export function ColorPreview({ subjects, colorMap, onShuffle, onColorChange }: C
 
   return (
     <div className="color-preview" ref={containerRef}>
-      <span className="color-preview__label">Xem trước màu trên Google Calendar</span>
+      <span className="color-preview__label">
+        <FiEye aria-hidden="true" />
+        Xem trước màu trên Google Calendar
+      </span>
       <p className="color-preview__hint">
         Bạn có thể ấn vô các card để tự chỉnh màu hoặc ấn vào nút "Đổi màu" để thay đổi ngẫu nhiên.
       </p>

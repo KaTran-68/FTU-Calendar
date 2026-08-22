@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react'
-import { FiArrowLeft, FiCheck } from 'react-icons/fi'
+import { FiArrowLeft, FiBell, FiCheck, FiEdit3 } from 'react-icons/fi'
 import { ColorPreview } from './ColorPreview'
 import { Modal } from './Modal'
 import { ProgressPanel } from './ProgressPanel'
@@ -105,23 +105,35 @@ export function CalendarConfigStep({
         Quay lại
       </button>
 
-      <label htmlFor="calendar-name">Tên Calendar</label>
-      <input
-        id="calendar-name"
-        type="text"
-        value={calendarName}
-        onChange={(event) => setCalendarName(event.target.value)}
-      />
+      <div className="field-row">
+        <div className="field">
+          <label htmlFor="calendar-name">Tên Calendar</label>
+          <div className="field__input-wrap">
+            <FiEdit3 aria-hidden="true" />
+            <input
+              id="calendar-name"
+              type="text"
+              value={calendarName}
+              onChange={(event) => setCalendarName(event.target.value)}
+            />
+          </div>
+        </div>
 
-      <label htmlFor="reminder-minutes">Nhắc trước (phút)</label>
-      <input
-        id="reminder-minutes"
-        type="number"
-        min={MIN_REMINDER_MINUTES}
-        max={MAX_REMINDER_MINUTES}
-        value={reminderMinutes}
-        onChange={(event) => setReminderMinutes(Number(event.target.value))}
-      />
+        <div className="field">
+          <label htmlFor="reminder-minutes">Nhắc trước (phút)</label>
+          <div className="field__input-wrap">
+            <FiBell aria-hidden="true" />
+            <input
+              id="reminder-minutes"
+              type="number"
+              min={MIN_REMINDER_MINUTES}
+              max={MAX_REMINDER_MINUTES}
+              value={reminderMinutes}
+              onChange={(event) => setReminderMinutes(Number(event.target.value))}
+            />
+          </div>
+        </div>
+      </div>
 
       <ColorPreview
         subjects={subjects}
