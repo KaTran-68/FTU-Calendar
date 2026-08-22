@@ -116,7 +116,25 @@ describe('CalendarConfigStep', () => {
     fireEvent.change(screen.getByLabelText(/nhắc trước/i), { target: { value: '99999' } })
     fireEvent.click(screen.getByRole('button', { name: /xác nhận tạo lịch/i }))
 
-    expect(screen.getByRole('alert')).toHaveTextContent('Số phút nhắc phải từ')
+    expect(screen.getByRole('alert')).toHaveTextContent('Số phút nhắc phải là số nguyên')
+  })
+
+  it('báo lỗi khi số phút nhắc là số thập phân', () => {
+    render(<CalendarConfigStep schedule={schedule} onBack={vi.fn()} />)
+
+    fireEvent.change(screen.getByLabelText(/nhắc trước/i), { target: { value: '1.5' } })
+    fireEvent.click(screen.getByRole('button', { name: /xác nhận tạo lịch/i }))
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Số phút nhắc phải là số nguyên')
+  })
+
+  it('khoá nút Quay lại trong lúc đang đăng nhập/tạo lịch', async () => {
+    vi.mocked(requestGoogleAccessToken).mockImplementation(() => new Promise(() => {}))
+    render(<CalendarConfigStep schedule={schedule} onBack={vi.fn()} clientId="test-client-id" />)
+
+    fireEvent.click(screen.getByRole('button', { name: /xác nhận tạo lịch/i }))
+
+    expect(await screen.findByRole('button', { name: /quay lại/i })).toBeDisabled()
   })
 
   it('đăng nhập Google rồi tạo lịch thành công, hiển thị tiến độ', async () => {

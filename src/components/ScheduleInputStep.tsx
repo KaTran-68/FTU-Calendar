@@ -14,12 +14,29 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
+function isExcelFile(file: File): boolean {
+  return file.name.toLowerCase().endsWith('.xlsx')
+}
+
 export function ScheduleInputStep({ onParsed }: ScheduleInputStepProps) {
   const [file, setFile] = useState<File | null>(null)
   const [isDragActive, setIsDragActive] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isParsing, setIsParsing] = useState(false)
   const [isGuideOpen, setIsGuideOpen] = useState(false)
+
+  function pickFile(candidate: File | null | undefined) {
+    if (!candidate) return
+
+    if (!isExcelFile(candidate)) {
+      setError('Chỉ hỗ trợ file .xlsx. Hãy chọn đúng file Excel export từ FTU2.')
+      setFile(null)
+      return
+    }
+
+    setError(null)
+    setFile(candidate)
+  }
 
   function handleDragOver(event: DragEvent<HTMLElement>) {
     event.preventDefault()
@@ -34,8 +51,7 @@ export function ScheduleInputStep({ onParsed }: ScheduleInputStepProps) {
   function handleDrop(event: DragEvent<HTMLElement>) {
     event.preventDefault()
     setIsDragActive(false)
-    const dropped = event.dataTransfer.files[0]
-    if (dropped) setFile(dropped)
+    pickFile(event.dataTransfer.files[0])
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -116,7 +132,7 @@ export function ScheduleInputStep({ onParsed }: ScheduleInputStepProps) {
           accept=".xlsx"
           aria-label="File Excel thời khoá biểu"
           className="file-drop__input"
-          onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+          onChange={(event) => pickFile(event.target.files?.[0])}
         />
       </div>
 

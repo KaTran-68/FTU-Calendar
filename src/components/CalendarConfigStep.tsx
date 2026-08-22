@@ -63,8 +63,14 @@ export function CalendarConfigStep({
       setError('Vui lòng nhập tên calendar.')
       return
     }
-    if (reminderMinutes < MIN_REMINDER_MINUTES || reminderMinutes > MAX_REMINDER_MINUTES) {
-      setError(`Số phút nhắc phải từ ${MIN_REMINDER_MINUTES} đến ${MAX_REMINDER_MINUTES}.`)
+    if (
+      !Number.isInteger(reminderMinutes) ||
+      reminderMinutes < MIN_REMINDER_MINUTES ||
+      reminderMinutes > MAX_REMINDER_MINUTES
+    ) {
+      setError(
+        `Số phút nhắc phải là số nguyên từ ${MIN_REMINDER_MINUTES} đến ${MAX_REMINDER_MINUTES}.`,
+      )
       return
     }
 
@@ -100,7 +106,12 @@ export function CalendarConfigStep({
 
   return (
     <form className="wizard-form" onSubmit={handleConfirm} noValidate>
-      <button type="button" className="wizard-form__back" onClick={onBack}>
+      <button
+        type="button"
+        className="wizard-form__back"
+        onClick={onBack}
+        disabled={status !== 'idle'}
+      >
         <FiArrowLeft aria-hidden="true" />
         Quay lại
       </button>
@@ -126,6 +137,7 @@ export function CalendarConfigStep({
             <input
               id="reminder-minutes"
               type="number"
+              step={1}
               min={MIN_REMINDER_MINUTES}
               max={MAX_REMINDER_MINUTES}
               value={reminderMinutes}

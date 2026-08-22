@@ -88,4 +88,38 @@ describe('ColorPreview', () => {
     expect(onColorChange).toHaveBeenCalledWith('TST101', '3')
     expect(screen.queryByText(/Chọn màu cho/)).not.toBeInTheDocument()
   })
+
+  it('đóng bảng chọn màu khi bấm ra ngoài', () => {
+    render(
+      <ColorPreview
+        subjects={[{ code: 'TST101', name: 'Nhập môn kiểm thử' }]}
+        colorMap={new Map([['TST101', '1']])}
+        onShuffle={vi.fn()}
+        onColorChange={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(screen.getByText('Nhập môn kiểm thử'))
+    expect(screen.getByText(/Chọn màu cho/)).toBeInTheDocument()
+
+    fireEvent.mouseDown(document.body)
+
+    expect(screen.queryByText(/Chọn màu cho/)).not.toBeInTheDocument()
+  })
+
+  it('không đóng bảng chọn màu khi bấm bên trong panel', () => {
+    render(
+      <ColorPreview
+        subjects={[{ code: 'TST101', name: 'Nhập môn kiểm thử' }]}
+        colorMap={new Map([['TST101', '1']])}
+        onShuffle={vi.fn()}
+        onColorChange={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(screen.getByText('Nhập môn kiểm thử'))
+    fireEvent.mouseDown(screen.getByText(/Chọn màu cho/))
+
+    expect(screen.getByText(/Chọn màu cho/)).toBeInTheDocument()
+  })
 })

@@ -40,6 +40,10 @@
 }
 
 .app-header h1 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   margin: 0;
   background: var(--gradient-brand);
   background-clip: text;
@@ -48,6 +52,13 @@
   font-size: clamp(30px, 6vw, 50px);
   font-weight: 800;
   letter-spacing: -1px;
+}
+
+.app-header__icon {
+  width: 1em;
+  height: 1em;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .app-header__credit {
@@ -461,6 +472,12 @@
   color: var(--color-blue-dark);
 }
 
+.wizard-form__back:disabled {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}
+
 .wizard-form__error {
   margin: 0;
   padding: 10px 14px;
@@ -746,8 +763,19 @@
 }
 
 .app-footer__year {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   margin: 0 0 10px;
   font-weight: 600;
+}
+
+.app-footer__icon {
+  width: 1em;
+  height: 1em;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .app-footer__note {

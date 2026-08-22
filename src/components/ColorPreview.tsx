@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { FiEye, FiShuffle } from 'react-icons/fi'
 import { EVENT_COLOR_HEX, EVENT_COLOR_IDS, EVENT_COLOR_NAMES } from '../lib/colors'
 
@@ -43,6 +43,19 @@ export function ColorPreview({ subjects, colorMap, onShuffle, onColorChange }: C
     onColorChange(subjectCode, colorId)
     setOpenSubjectCode(null)
   }
+
+  useEffect(() => {
+    if (!openSubjectCode) return
+
+    function handleOutsideClick(event: MouseEvent) {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setOpenSubjectCode(null)
+      }
+    }
+
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [openSubjectCode])
 
   return (
     <div className="color-preview" ref={containerRef}>

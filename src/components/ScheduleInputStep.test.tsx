@@ -83,6 +83,24 @@ describe('ScheduleInputStep', () => {
     expect(screen.getByText(/kéo thả file/i)).toBeInTheDocument()
   })
 
+  it('báo lỗi khi chọn file không phải .xlsx', () => {
+    render(<ScheduleInputStep onParsed={vi.fn()} />)
+
+    selectFile(new File(['x'], 'tkb.pdf'))
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Chỉ hỗ trợ file .xlsx')
+    expect(screen.queryByText('tkb.pdf')).not.toBeInTheDocument()
+  })
+
+  it('báo lỗi khi kéo thả file không phải .xlsx', () => {
+    render(<ScheduleInputStep onParsed={vi.fn()} />)
+
+    const dropzone = screen.getByText(/kéo thả file/i)
+    fireEvent.drop(dropzone, { dataTransfer: { files: [new File(['x'], 'anh.png')] } })
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Chỉ hỗ trợ file .xlsx')
+  })
+
   it('mở modal hướng dẫn khi bấm nút Hướng dẫn, đóng lại khi bấm Đã hiểu', () => {
     render(<ScheduleInputStep onParsed={vi.fn()} />)
 
