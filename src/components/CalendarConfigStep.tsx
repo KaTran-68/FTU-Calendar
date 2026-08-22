@@ -3,7 +3,7 @@ import { FiArrowLeft, FiCheck } from 'react-icons/fi'
 import { ColorPreview } from './ColorPreview'
 import { Modal } from './Modal'
 import { ProgressPanel } from './ProgressPanel'
-import { buildSubjectColorMap, EVENT_COLOR_IDS, shuffleColorOrder } from '../lib/colors'
+import { AUTO_COLOR_IDS, buildSubjectColorMap, shuffleColorOrder } from '../lib/colors'
 import { requestGoogleAccessToken } from '../lib/googleAuth'
 import {
   calendarSummaryForSemester,
@@ -31,7 +31,7 @@ export function CalendarConfigStep({
 }: CalendarConfigStepProps) {
   const [calendarName, setCalendarName] = useState(calendarSummaryForSemester(schedule.semester))
   const [reminderMinutes, setReminderMinutes] = useState(45)
-  const [colorOrder, setColorOrder] = useState<string[]>(EVENT_COLOR_IDS)
+  const [colorOrder, setColorOrder] = useState<string[]>(AUTO_COLOR_IDS)
   const [colorOverrides, setColorOverrides] = useState<Record<string, string>>({})
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [status, setStatus] = useState<Status>('idle')

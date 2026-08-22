@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildSubjectColorMap, EVENT_COLOR_IDS, shuffleColorOrder } from './colors'
+import { AUTO_COLOR_IDS, buildSubjectColorMap, EVENT_COLOR_IDS, shuffleColorOrder } from './colors'
 import type { ClassSession } from '../types/schedule'
 
 function sessionWithSubject(subjectCode: string): ClassSession {
@@ -44,9 +44,24 @@ describe('buildSubjectColorMap', () => {
   })
 })
 
+describe('AUTO_COLOR_IDS', () => {
+  it('không chứa màu xám (Graphite, id 8) để không tự động gán/random', () => {
+    expect(AUTO_COLOR_IDS).not.toContain('8')
+    expect(AUTO_COLOR_IDS).toHaveLength(EVENT_COLOR_IDS.length - 1)
+  })
+})
+
 describe('shuffleColorOrder', () => {
-  it('trả về mảng có đúng các phần tử ban đầu, chỉ đổi thứ tự', () => {
+  it('mặc định chỉ xáo trong bộ màu tự động, không có màu xám', () => {
     const shuffled = shuffleColorOrder()
+
+    expect(shuffled).toHaveLength(AUTO_COLOR_IDS.length)
+    expect([...shuffled].sort()).toEqual([...AUTO_COLOR_IDS].sort())
+    expect(shuffled).not.toContain('8')
+  })
+
+  it('trả về mảng có đúng các phần tử ban đầu, chỉ đổi thứ tự', () => {
+    const shuffled = shuffleColorOrder(EVENT_COLOR_IDS)
 
     expect(shuffled).toHaveLength(EVENT_COLOR_IDS.length)
     expect([...shuffled].sort()).toEqual([...EVENT_COLOR_IDS].sort())

@@ -2,6 +2,8 @@ import type { ClassSession } from '../types/schedule'
 
 export const EVENT_COLOR_IDS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']
 
+export const AUTO_COLOR_IDS = EVENT_COLOR_IDS.filter((id) => id !== '8')
+
 export const EVENT_COLOR_HEX: Record<string, string> = {
   '1': '#7986cb',
   '2': '#33b679',
@@ -43,7 +45,7 @@ export function buildSubjectColorMap(
   return map
 }
 
-export function shuffleColorOrder(order: string[] = EVENT_COLOR_IDS): string[] {
+export function shuffleColorOrder(order: string[] = AUTO_COLOR_IDS): string[] {
   const shuffled = [...order]
   for (let i = shuffled.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1))
