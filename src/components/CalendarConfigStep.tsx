@@ -178,6 +178,12 @@ export function CalendarConfigStep({
         </div>
       </div>
 
+      <p className="schedule-summary">
+        <FiCalendar aria-hidden="true" />
+        Sẽ tạo {sessionSummary.total} buổi học, từ {formatDisplayDate(sessionSummary.from)} đến{' '}
+        {formatDisplayDate(sessionSummary.to)}.
+      </p>
+
       <ColorPreview
         subjects={subjects}
         colorMap={colorMap}
@@ -189,12 +195,6 @@ export function CalendarConfigStep({
           setColorOverrides((prev) => ({ ...prev, [subjectCode]: colorId }))
         }
       />
-
-      <p className="schedule-summary">
-        <FiCalendar aria-hidden="true" />
-        Sẽ tạo {sessionSummary.total} buổi học, từ {formatDisplayDate(sessionSummary.from)} đến{' '}
-        {formatDisplayDate(sessionSummary.to)}.
-      </p>
 
       <button type="submit" disabled={status !== 'idle'}>
         <FiCheck aria-hidden="true" />

@@ -8,7 +8,7 @@ export function Footer() {
         © 2026 <img src="/favicon.png" alt="" className="app-footer__icon" />
         FTU2 Calendar
       </p>
-      <p className="app-footer__note">Mọi đóng góp hãy liên hệ gmail ở dưới</p>
+      <p className="app-footer__note">Mọi đóng góp hãy liên hệ ở dưới</p>
       <div className="app-footer__links">
         <a href="mailto:tkhoa06082005@gmail.com">
           <FiMail aria-hidden="true" />

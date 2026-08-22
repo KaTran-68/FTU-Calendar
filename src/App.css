@@ -489,16 +489,21 @@
 }
 
 .schedule-summary {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  margin: 0;
-  color: var(--color-muted);
-  font-size: 12.5px;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: #eaf1fb;
+  color: var(--color-blue-dark);
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .schedule-summary svg {
   color: var(--color-blue);
+  font-size: 17px;
   flex-shrink: 0;
 }
 
