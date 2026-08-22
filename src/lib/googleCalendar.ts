@@ -131,7 +131,12 @@ function buildEventBody(session: ClassSession, colorId: string, reminderMinutes:
   return {
     summary: `${session.subjectName} (${session.subjectCode})`,
     location: session.room,
-    description: `Lớp ${session.className} - Nhóm ${session.group}`,
+    description: [
+      `Lớp ${session.className} - Nhóm ${session.group}`,
+      session.teacher ? `GV: ${session.teacher}` : null,
+    ]
+      .filter(Boolean)
+      .join('\n'),
     start: {
       dateTime: `${session.date}T${session.startTime}:00`,
       timeZone: CALENDAR_TIME_ZONE,

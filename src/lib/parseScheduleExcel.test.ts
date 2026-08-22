@@ -36,7 +36,7 @@ describe('parseScheduleWorkbook', () => {
         7,
         3,
         'PH.A504',
-        '',
+        'Nguyễn Văn A',
         '08/09/26 đến 22/09/26',
       ],
     ])
@@ -51,6 +51,7 @@ describe('parseScheduleWorkbook', () => {
       className: 'DC65KTDN01',
       group: '597',
       room: 'PH.A504',
+      teacher: 'Nguyễn Văn A',
       date: '2026-09-08',
       startTime: '12:30',
       endTime: '14:45',

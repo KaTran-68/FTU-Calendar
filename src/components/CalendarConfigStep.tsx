@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react'
-import { FiArrowLeft, FiBell, FiCheck, FiEdit3 } from 'react-icons/fi'
+import { FiArrowLeft, FiBell, FiCalendar, FiCheck, FiEdit3 } from 'react-icons/fi'
 import { ColorPreview } from './ColorPreview'
 import { Modal } from './Modal'
 import { ProgressPanel } from './ProgressPanel'
@@ -17,6 +17,11 @@ const MIN_REMINDER_MINUTES = 0
 const MAX_REMINDER_MINUTES = 40320
 
 type Status = 'idle' | 'authorizing' | 'pushing'
+
+function formatDisplayDate(iso: string): string {
+  const [year, month, day] = iso.split('-')
+  return `${day}/${month}/${year}`
+}
 
 interface CalendarConfigStepProps {
   schedule: ParsedSchedule
@@ -54,6 +59,35 @@ export function CalendarConfigStep({
     return map
   }, [schedule, colorOrder, colorOverrides])
 
+  const sessionSummary = useMemo(() => {
+    const dates = schedule.sessions.map((session) => session.date).sort()
+    return {
+      total: schedule.sessions.length,
+      from: dates[0],
+      to: dates[dates.length - 1],
+    }
+  }, [schedule])
+
+  async function runPush(token: string) {
+    setStatus('pushing')
+    try {
+      const calendarId = await ensureCalendar(token, calendarName.trim())
+      const finalProgress = await pushSessionsToGoogleCalendar(
+        token,
+        calendarId,
+        schedule.sessions,
+        reminderMinutes,
+        colorMap,
+        setProgress,
+      )
+      setProgress(finalProgress)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi tạo lịch.')
+    } finally {
+      setStatus('idle')
+    }
+  }
+
   async function handleConfirm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
@@ -74,34 +108,31 @@ export function CalendarConfigStep({
       return
     }
 
-    try {
-      let token = accessToken
-      if (!token) {
-        if (!clientId) {
-          setError('Thiếu VITE_GOOGLE_CLIENT_ID trong file .env.')
-          return
-        }
-        setStatus('authorizing')
-        token = await requestGoogleAccessToken(clientId)
-        setAccessToken(token)
+    let token = accessToken
+    if (!token) {
+      if (!clientId) {
+        setError('Thiếu VITE_GOOGLE_CLIENT_ID trong file .env.')
+        return
       }
-
-      setStatus('pushing')
-      const calendarId = await ensureCalendar(token, calendarName.trim())
-      const finalProgress = await pushSessionsToGoogleCalendar(
-        token,
-        calendarId,
-        schedule.sessions,
-        reminderMinutes,
-        colorMap,
-        setProgress,
-      )
-      setProgress(finalProgress)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi tạo lịch.')
-    } finally {
-      setStatus('idle')
+      setStatus('authorizing')
+      try {
+        token = await requestGoogleAccessToken(clientId)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi tạo lịch.')
+        setStatus('idle')
+        return
+      }
+      setAccessToken(token)
     }
+
+    await runPush(token)
+  }
+
+  function handleRetry() {
+    if (!accessToken) return
+    setError(null)
+    setProgress(null)
+    void runPush(accessToken)
   }
 
   return (
@@ -159,6 +190,12 @@ export function CalendarConfigStep({
         }
       />
 
+      <p className="schedule-summary">
+        <FiCalendar aria-hidden="true" />
+        Sẽ tạo {sessionSummary.total} buổi học, từ {formatDisplayDate(sessionSummary.from)} đến{' '}
+        {formatDisplayDate(sessionSummary.to)}.
+      </p>
+
       <button type="submit" disabled={status !== 'idle'}>
         <FiCheck aria-hidden="true" />
         {status === 'authorizing' && 'Đang đăng nhập Google...'}
@@ -191,6 +228,7 @@ export function CalendarConfigStep({
                 progress={progress}
                 semester={schedule.semester}
                 onClose={() => setProgress(null)}
+                onRetry={progress.failed > 0 ? handleRetry : undefined}
               />
             )
           )}

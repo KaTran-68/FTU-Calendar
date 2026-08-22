@@ -5,6 +5,7 @@ export interface ClassSession {
   room: string
   className: string
   group: string
+  teacher: string
   date: string
   startTime: string
   endTime: string

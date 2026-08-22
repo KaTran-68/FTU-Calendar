@@ -16,6 +16,7 @@ function makeSession(overrides: Partial<ClassSession> = {}): ClassSession {
     room: 'PH.A101',
     className: 'DEMO01',
     group: '101',
+    teacher: '',
     date: '2025-09-08',
     startTime: '06:45',
     endTime: '11:30',
@@ -82,11 +83,29 @@ describe('pushSessionsToGoogleCalendar', () => {
       expect.objectContaining({
         summary: 'Nhập môn kiểm thử (TST101)',
         location: 'PH.A101',
+        description: 'Lớp DEMO01 - Nhóm 101',
         start: { dateTime: '2025-09-08T06:45:00', timeZone: 'Asia/Ho_Chi_Minh' },
         end: { dateTime: '2025-09-08T11:30:00', timeZone: 'Asia/Ho_Chi_Minh' },
         colorId: '1',
         reminders: { useDefault: false, overrides: [{ method: 'popup', minutes: 45 }] },
         extendedProperties: { private: { ftuId: 'new-one' } },
+      }),
+    )
+  })
+
+  it('thêm tên giảng viên vào mô tả sự kiện khi có', async () => {
+    const sessions = [makeSession({ teacher: 'Nguyễn Văn A' })]
+    const get = vi.fn().mockResolvedValue({ data: { items: [] } })
+    const post = vi.fn().mockResolvedValue({ data: {} })
+    vi.spyOn(axios, 'create').mockReturnValue({ get, post } as never)
+
+    const colorMap = buildSubjectColorMap(sessions)
+    await pushSessionsToGoogleCalendar('token', 'cal-1', sessions, 45, colorMap)
+
+    expect(post).toHaveBeenCalledWith(
+      '/calendars/cal-1/events',
+      expect.objectContaining({
+        description: 'Lớp DEMO01 - Nhóm 101\nGV: Nguyễn Văn A',
       }),
     )
   })

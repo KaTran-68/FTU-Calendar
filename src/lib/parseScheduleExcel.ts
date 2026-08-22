@@ -28,6 +28,7 @@ const REQUIRED_COLUMNS = [
   'Tiết bắt đầu',
   'Số tiết',
   'Phòng',
+  'Giảng viên',
   'Thời gian học',
 ] as const
 
@@ -106,6 +107,7 @@ export function parseScheduleWorkbook(buffer: ArrayBuffer): ParsedSchedule {
     const group = toText(row['Nhóm tổ'])
     const className = toText(row['Lớp'])
     const room = toText(row['Phòng'])
+    const teacher = toText(row['Giảng viên'])
     const startPeriod = Number(row['Tiết bắt đầu'])
     const numPeriods = Number(row['Số tiết'])
 
@@ -127,6 +129,7 @@ export function parseScheduleWorkbook(buffer: ArrayBuffer): ParsedSchedule {
         room,
         className,
         group,
+        teacher,
         date: formatDate(current),
         startTime,
         endTime,

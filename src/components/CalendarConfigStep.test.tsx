@@ -33,6 +33,7 @@ const schedule: ParsedSchedule = {
       room: 'PH.A101',
       className: 'DEMO01',
       group: '101',
+      teacher: '',
       date: '2025-09-08',
       startTime: '06:45',
       endTime: '11:30',
@@ -44,6 +45,7 @@ const schedule: ParsedSchedule = {
       room: 'PH.B202',
       className: 'DEMO01',
       group: '202',
+      teacher: '',
       date: '2025-09-09',
       startTime: '15:00',
       endTime: '17:15',
@@ -65,6 +67,14 @@ describe('CalendarConfigStep', () => {
     expect(screen.getByLabelText(/nhắc trước/i)).toHaveValue(45)
     expect(screen.getByText('Nhập môn kiểm thử')).toBeInTheDocument()
     expect(screen.getByText('Phát triển phần mềm')).toBeInTheDocument()
+  })
+
+  it('hiển thị tóm tắt số buổi và khoảng ngày trước khi xác nhận', () => {
+    render(<CalendarConfigStep schedule={schedule} onBack={vi.fn()} />)
+
+    expect(screen.getByText(/sẽ tạo 2 buổi học/i)).toHaveTextContent(
+      'Sẽ tạo 2 buổi học, từ 08/09/2025 đến 09/09/2025.',
+    )
   })
 
   it('gọi onBack khi bấm Quay lại', () => {
@@ -161,6 +171,23 @@ describe('CalendarConfigStep', () => {
       expect.any(Map),
       expect.any(Function),
     )
+  })
+
+  it('bấm Thử lại buổi lỗi sẽ đẩy lại mà không đăng nhập lại', async () => {
+    vi.mocked(requestGoogleAccessToken).mockResolvedValue('token-abc')
+    vi.mocked(ensureCalendar).mockResolvedValue('cal-1')
+    vi.mocked(pushSessionsToGoogleCalendar)
+      .mockResolvedValueOnce({ total: 2, created: 1, skipped: 0, failed: 1 })
+      .mockResolvedValueOnce({ total: 2, created: 2, skipped: 0, failed: 0 })
+
+    render(<CalendarConfigStep schedule={schedule} onBack={vi.fn()} clientId="test-client-id" />)
+    fireEvent.click(screen.getByRole('button', { name: /xác nhận tạo lịch/i }))
+
+    fireEvent.click(await screen.findByRole('button', { name: /thử lại buổi lỗi/i }))
+
+    expect(await screen.findByText(/2\/2/)).toBeInTheDocument()
+    expect(requestGoogleAccessToken).toHaveBeenCalledTimes(1)
+    expect(pushSessionsToGoogleCalendar).toHaveBeenCalledTimes(2)
   })
 
   it('hiển thị lỗi thân thiện khi đăng nhập Google thất bại', async () => {

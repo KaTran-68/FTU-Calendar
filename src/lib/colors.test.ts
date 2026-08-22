@@ -10,6 +10,7 @@ function sessionWithSubject(subjectCode: string): ClassSession {
     room: 'PH.A101',
     className: 'DEMO01',
     group: '101',
+    teacher: '',
     date: '2025-09-08',
     startTime: '06:45',
     endTime: '07:30',
