@@ -1,6 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { FiArrowLeft, FiCheck } from 'react-icons/fi'
 import { ColorPreview } from './ColorPreview'
+import { Modal } from './Modal'
 import { ProgressPanel } from './ProgressPanel'
 import { buildSubjectColorMap, EVENT_COLOR_IDS, shuffleColorOrder } from '../lib/colors'
 import { requestGoogleAccessToken } from '../lib/googleAuth'
@@ -146,7 +147,31 @@ export function CalendarConfigStep({
           {error}
         </p>
       )}
-      {progress && <ProgressPanel progress={progress} semester={schedule.semester} />}
+      {(status !== 'idle' || progress) && (
+        <Modal onClose={status === 'idle' ? () => setProgress(null) : () => {}}>
+          {status !== 'idle' ? (
+            <div className="modal-loading">
+              <span className="modal-loading__spinner" aria-hidden="true" />
+              <p className="modal-loading__text">
+                {status === 'authorizing' ? 'Đang đăng nhập Google...' : 'Đang tạo lịch...'}
+              </p>
+              {status === 'pushing' && progress && (
+                <p className="modal-loading__count">
+                  {progress.created + progress.skipped}/{progress.total}
+                </p>
+              )}
+            </div>
+          ) : (
+            progress && (
+              <ProgressPanel
+                progress={progress}
+                semester={schedule.semester}
+                onClose={() => setProgress(null)}
+              />
+            )
+          )}
+        </Modal>
+      )}
     </form>
   )
 }

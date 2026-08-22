@@ -124,6 +124,24 @@ describe('pushSessionsToGoogleCalendar', () => {
     const progress = await pushSessionsToGoogleCalendar('token', 'cal-1', sessions, 45, colorMap)
 
     expect(progress).toEqual({ total: 1, created: 0, skipped: 0, failed: 1 })
-    expect(post).toHaveBeenCalledTimes(1)
+    expect(post).toHaveBeenCalledTimes(2)
+  })
+
+  it('vòng thử lại tuần tự thứ hai cứu được buổi bị lỗi ở lượt chạy song song', async () => {
+    const sessions = [makeSession()]
+    const get = vi.fn().mockResolvedValue({ data: { items: [] } })
+
+    const permanentError = Object.assign(new Error('bad request'), {
+      isAxiosError: true,
+      response: { status: 400, data: {} },
+    })
+    const post = vi.fn().mockRejectedValueOnce(permanentError).mockResolvedValueOnce({ data: {} })
+    vi.spyOn(axios, 'create').mockReturnValue({ get, post } as never)
+
+    const colorMap = buildSubjectColorMap(sessions)
+    const progress = await pushSessionsToGoogleCalendar('token', 'cal-1', sessions, 45, colorMap)
+
+    expect(progress).toEqual({ total: 1, created: 1, skipped: 0, failed: 0 })
+    expect(post).toHaveBeenCalledTimes(2)
   })
 })

@@ -3,10 +3,16 @@ import type { ClassSession } from '../types/schedule'
 
 const CALENDAR_API_BASE = 'https://www.googleapis.com/calendar/v3'
 const CALENDAR_TIME_ZONE = 'Asia/Ho_Chi_Minh'
-const MAX_CONCURRENCY = 5
-const MAX_RETRIES = 3
-const RETRY_BASE_DELAY_MS = 300
-const RETRYABLE_REASONS = ['rateLimitExceeded', 'userRateLimitExceeded']
+const MAX_CONCURRENCY = 3
+const MAX_RETRIES = 6
+const RETRY_BASE_DELAY_MS = 500
+const MAX_RETRY_DELAY_MS = 8000
+const RETRYABLE_REASONS = [
+  'rateLimitExceeded',
+  'userRateLimitExceeded',
+  'quotaExceeded',
+  'backendError',
+]
 
 export interface PushProgress {
   total: number
@@ -34,9 +40,11 @@ function createClient(accessToken: string): AxiosInstance {
 
 function isRetryableError(error: unknown): boolean {
   if (!axios.isAxiosError(error)) return false
-  if (error.response?.status === 429) return true
-  if (error.response?.status !== 403) return false
-  const reason = (error.response?.data as GoogleApiErrorPayload | undefined)?.error?.errors?.[0]
+  if (!error.response) return true
+  const status = error.response.status
+  if (status === 429 || status >= 500) return true
+  if (status !== 403) return false
+  const reason = (error.response.data as GoogleApiErrorPayload | undefined)?.error?.errors?.[0]
     ?.reason
   return reason !== undefined && RETRYABLE_REASONS.includes(reason)
 }
@@ -53,7 +61,7 @@ async function withRetry<T>(task: () => Promise<T>): Promise<T> {
     } catch (error) {
       attempt += 1
       if (attempt > MAX_RETRIES || !isRetryableError(error)) throw error
-      await wait(RETRY_BASE_DELAY_MS * 2 ** (attempt - 1))
+      await wait(Math.min(RETRY_BASE_DELAY_MS * 2 ** (attempt - 1), MAX_RETRY_DELAY_MS))
     }
   }
 }
@@ -155,27 +163,47 @@ export async function pushSessionsToGoogleCalendar(
   const existingFtuIds = await fetchExistingFtuIds(client, calendarId)
 
   const progress: PushProgress = { total: sessions.length, created: 0, skipped: 0, failed: 0 }
-
-  await runWithConcurrency(sessions, MAX_CONCURRENCY, async (session) => {
+  const pending: ClassSession[] = []
+  for (const session of sessions) {
     if (existingFtuIds.has(session.id)) {
       progress.skipped += 1
-      onProgress?.({ ...progress })
-      return
+    } else {
+      pending.push(session)
     }
+  }
+  onProgress?.({ ...progress })
 
+  async function attemptCreate(session: ClassSession): Promise<boolean> {
     const colorId = colorMap.get(session.subjectCode) ?? '1'
     const body = buildEventBody(session, colorId, reminderMinutes)
-
     try {
       await withRetry(() =>
         client.post(`/calendars/${encodeURIComponent(calendarId)}/events`, body),
       )
-      progress.created += 1
+      return true
     } catch {
-      progress.failed += 1
+      return false
+    }
+  }
+
+  const stragglers: ClassSession[] = []
+  await runWithConcurrency(pending, MAX_CONCURRENCY, async (session) => {
+    if (await attemptCreate(session)) {
+      progress.created += 1
+    } else {
+      stragglers.push(session)
     }
     onProgress?.({ ...progress })
   })
+
+  for (const session of stragglers) {
+    if (await attemptCreate(session)) {
+      progress.created += 1
+    } else {
+      progress.failed += 1
+    }
+    onProgress?.({ ...progress })
+  }
 
   return progress
 }
