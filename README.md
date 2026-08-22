@@ -1,4 +1,4 @@
-# FTU2 Calendar
+# FTU2 Calendar - By Ka, for Bống
 
 A web app that lets FTU2 students upload the class schedule Excel file exported from the student portal and automatically push the whole semester onto their personal Google Calendar — one color per subject, with a reminder set to fire a chosen number of minutes before each class.
 

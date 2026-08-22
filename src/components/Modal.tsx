@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 
 interface ModalProps {
   children: ReactNode
@@ -14,7 +15,7 @@ export function Modal({ children, onClose }: ModalProps) {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div
         className="modal-content"
@@ -24,6 +25,7 @@ export function Modal({ children, onClose }: ModalProps) {
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
