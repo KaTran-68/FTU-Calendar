@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chính sách quyền riêng tư - FTU2 Calendar</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 32px 20px 60px;
+        background: #f6f6f7;
+        color: #1c2027;
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        line-height: 1.6;
+      }
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+        background: #fff;
+        border: 1px solid #e2e5ec;
+        border-radius: 16px;
+        padding: 32px 36px;
+      }
+      h1 {
+        font-size: 26px;
+        margin: 0 0 4px;
+      }
+      .updated {
+        color: #6b7280;
+        font-size: 13px;
+        margin: 0 0 28px;
+      }
+      h2 {
+        font-size: 18px;
+        margin: 28px 0 8px;
+      }
+      p,
+      li {
+        font-size: 14.5px;
+      }
+      ul {
+        padding-left: 20px;
+      }
+      a {
+        color: #1565c0;
+      }
+      code {
+        background: #f2f4f9;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Chính sách quyền riêng tư</h1>
+      <p class="updated">FTU2 Calendar &middot; Cập nhật lần cuối: 24/08/2026</p>
+
+      <p>
+        FTU2 Calendar ("ứng dụng") là công cụ giúp sinh viên FTU2 tải lên file Excel thời khoá biểu
+        và tự động tạo các sự kiện tương ứng trên Google Calendar cá nhân của chính họ. Trang này
+        giải thích ứng dụng xử lý dữ liệu như thế nào.
+      </p>
+
+      <h2>1. Ứng dụng không có backend/máy chủ riêng</h2>
+      <p>
+        FTU2 Calendar là một ứng dụng web tĩnh (frontend-only), chạy hoàn toàn trong trình duyệt của
+        bạn. Không có máy chủ nào của chúng tôi lưu trữ, xử lý hay có quyền truy cập vào dữ liệu của
+        bạn. Mọi thao tác (đọc file Excel, ghép lịch, gọi Google Calendar API) đều diễn ra trực tiếp
+        trên máy bạn.
+      </p>
+
+      <h2>2. Dữ liệu ứng dụng truy cập</h2>
+      <ul>
+        <li>
+          <strong>File Excel thời khoá biểu</strong> bạn tải lên: chỉ được đọc và xử lý trong bộ nhớ
+          trình duyệt (client-side), không được tải lên bất kỳ máy chủ nào, không được lưu lại sau
+          khi bạn đóng hoặc tải lại trang.
+        </li>
+        <li>
+          <strong>Quyền truy cập Google Calendar</strong> (scope
+          <code>https://www.googleapis.com/auth/calendar</code>): dùng để tạo một lịch riêng (dạng
+          "HK-&lt;học kỳ&gt;") trong tài khoản Google Calendar của chính bạn và thêm các sự kiện lớp
+          học vào đó. Ứng dụng không đọc, sửa hay xoá bất kỳ lịch/sự kiện nào khác ngoài những gì do
+          chính nó tạo ra.
+        </li>
+      </ul>
+
+      <h2>3. Token đăng nhập Google</h2>
+      <p>
+        Sau khi bạn đăng nhập bằng Google (qua Google Identity Services), access token chỉ được giữ
+        trong bộ nhớ tạm (JavaScript memory) của tab trình duyệt đang mở. Token này
+        <strong>không</strong> được lưu vào <code>localStorage</code>, <code>cookie</code>, hay bất
+        kỳ nơi lưu trữ lâu dài nào, và sẽ biến mất ngay khi bạn tải lại hoặc đóng trang.
+      </p>
+
+      <h2>4. Chia sẻ dữ liệu với bên thứ ba</h2>
+      <p>
+        Chúng tôi không chia sẻ, bán, hay chuyển giao bất kỳ dữ liệu nào cho bên thứ ba. Lệnh gọi
+        API duy nhất mà ứng dụng thực hiện là tới chính Google Calendar API, để tạo sự kiện vào
+        calendar của bạn theo yêu cầu của bạn.
+      </p>
+
+      <h2>5. Cookie &amp; theo dõi (tracking)</h2>
+      <p>
+        Ứng dụng không dùng cookie, không dùng công cụ phân tích/theo dõi (analytics) nào, không thu
+        thập dữ liệu hành vi người dùng.
+      </p>
+
+      <h2>6. Thu hồi quyền truy cập</h2>
+      <p>
+        Bạn có thể thu hồi quyền truy cập Google Calendar đã cấp cho FTU2 Calendar bất cứ lúc nào
+        tại
+        <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer"
+          >trang quản lý quyền truy cập bên thứ ba của Google</a
+        >.
+      </p>
+
+      <h2>7. Liên hệ</h2>
+      <p>
+        Có câu hỏi về chính sách này, liên hệ:
+        <a href="mailto:tkhoa06082005@gmail.com">tkhoa06082005@gmail.com</a>.
+      </p>
+    </main>
+  </body>
+</html>
