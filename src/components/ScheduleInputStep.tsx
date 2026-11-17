@@ -59,7 +59,7 @@ export function ScheduleInputStep({ onParsed }: ScheduleInputStepProps) {
     setError(null)
 
     if (!file) {
-      setError('Vui lòng chọn file Excel thời khoá biểu trước.')
+      setError('Vui lòng chọn file Excel thời khoá biểu hoặc lịch thi trước.')
       return
     }
 
@@ -79,7 +79,7 @@ export function ScheduleInputStep({ onParsed }: ScheduleInputStepProps) {
         <div className="field__header">
           <label>
             <FiUpload aria-hidden="true" />
-            File Excel thời khoá biểu
+            File Excel thời khoá biểu hoặc lịch thi
           </label>
           <button type="button" className="field__guide-btn" onClick={() => setIsGuideOpen(true)}>
             <FiHelpCircle aria-hidden="true" />
@@ -130,7 +130,7 @@ export function ScheduleInputStep({ onParsed }: ScheduleInputStepProps) {
           id="schedule-file"
           type="file"
           accept=".xlsx"
-          aria-label="File Excel thời khoá biểu"
+          aria-label="File Excel thời khoá biểu hoặc lịch thi"
           className="file-drop__input"
           onChange={(event) => pickFile(event.target.files?.[0])}
         />
@@ -150,7 +150,8 @@ export function ScheduleInputStep({ onParsed }: ScheduleInputStepProps) {
       {isGuideOpen && (
         <Modal onClose={() => setIsGuideOpen(false)}>
           <div className="guide-modal">
-            <h2 className="guide-modal__title">Cách lấy file Excel thời khoá biểu</h2>
+            <h2 className="guide-modal__title">Cách lấy file Excel</h2>
+            <h3>Thời khoá biểu</h3>
             <ol className="guide-modal__steps">
               <li>
                 Đăng nhập vào{' '}
@@ -168,6 +169,17 @@ export function ScheduleInputStep({ onParsed }: ScheduleInputStepProps) {
               </li>
               <li>
                 Chọn <strong>"Xuất Excel"</strong> để tải file Excel về.
+              </li>
+            </ol>
+            <h3>Lịch thi</h3>
+            <ol className="guide-modal__steps">
+              <li>
+                Trên FtuGate, vào phần <strong>Lịch thi</strong> ở thanh menu bên trái.
+              </li>
+              <li>Chọn Học kỳ và đợt thi bạn mong muốn.</li>
+              <li>
+                Chọn <strong>"Xuất Excel"</strong> để tải file Excel về. App tự nhận ra file lịch
+                thi và tạo calendar riêng (mỗi buổi thi mặc định kéo dài 90 phút).
               </li>
             </ol>
             <button

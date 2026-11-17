@@ -1,5 +1,5 @@
 import axios, { type AxiosInstance } from 'axios'
-import type { ClassSession } from '../types/schedule'
+import type { ClassSession, ScheduleKind } from '../types/schedule'
 
 const CALENDAR_API_BASE = 'https://www.googleapis.com/calendar/v3'
 const CALENDAR_TIME_ZONE = 'Asia/Ho_Chi_Minh'
@@ -27,8 +27,8 @@ interface GoogleApiErrorPayload {
   }
 }
 
-export function calendarSummaryForSemester(semester: string): string {
-  return `HK-${semester}`
+export function calendarSummaryForSemester(semester: string, kind: ScheduleKind = 'class'): string {
+  return kind === 'exam' ? `HK-${semester}-Thi` : `HK-${semester}`
 }
 
 function createClient(accessToken: string): AxiosInstance {
@@ -128,15 +128,18 @@ async function fetchExistingFtuIds(
 }
 
 function buildEventBody(session: ClassSession, colorId: string, reminderMinutes: number) {
+  const title = `${session.subjectName} (${session.subjectCode})`
   return {
-    summary: `${session.subjectName} (${session.subjectCode})`,
+    summary: session.kind === 'exam' ? `[Thi] ${title}` : title,
     location: session.room,
-    description: [
-      `Lớp ${session.className} - Nhóm ${session.group}`,
-      session.teacher ? `GV: ${session.teacher}` : null,
-    ]
-      .filter(Boolean)
-      .join('\n'),
+    description:
+      session.description ??
+      [
+        `Lớp ${session.className} - Nhóm ${session.group}`,
+        session.teacher ? `GV: ${session.teacher}` : null,
+      ]
+        .filter(Boolean)
+        .join('\n'),
     start: {
       dateTime: `${session.date}T${session.startTime}:00`,
       timeZone: CALENDAR_TIME_ZONE,

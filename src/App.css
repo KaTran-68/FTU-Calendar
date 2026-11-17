@@ -147,6 +147,12 @@
   font-weight: 800;
 }
 
+.guide-modal h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+}
+
 .guide-modal__steps {
   display: flex;
   flex-direction: column;

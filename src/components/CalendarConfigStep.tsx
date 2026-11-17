@@ -34,7 +34,10 @@ export function CalendarConfigStep({
   onBack,
   clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID,
 }: CalendarConfigStepProps) {
-  const [calendarName, setCalendarName] = useState(calendarSummaryForSemester(schedule.semester))
+  const isExam = schedule.kind === 'exam'
+  const [calendarName, setCalendarName] = useState(
+    calendarSummaryForSemester(schedule.semester, schedule.kind),
+  )
   const [reminderMinutes, setReminderMinutes] = useState(45)
   const [colorOrder, setColorOrder] = useState<string[]>(AUTO_COLOR_IDS)
   const [colorOverrides, setColorOverrides] = useState<Record<string, string>>({})
@@ -180,8 +183,8 @@ export function CalendarConfigStep({
 
       <p className="schedule-summary">
         <FiCalendar aria-hidden="true" />
-        Sẽ tạo {sessionSummary.total} buổi học, từ {formatDisplayDate(sessionSummary.from)} đến{' '}
-        {formatDisplayDate(sessionSummary.to)}.
+        Sẽ tạo {sessionSummary.total} {isExam ? 'buổi thi' : 'buổi học'}, từ{' '}
+        {formatDisplayDate(sessionSummary.from)} đến {formatDisplayDate(sessionSummary.to)}.
       </p>
 
       <ColorPreview
