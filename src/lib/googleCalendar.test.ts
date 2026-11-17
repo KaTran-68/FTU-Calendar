@@ -32,6 +32,10 @@ describe('calendarSummaryForSemester', () => {
   it('tạo tên lịch dạng HK-<mã học kỳ>', () => {
     expect(calendarSummaryForSemester('20261')).toBe('HK-20261')
   })
+
+  it('thêm hậu tố -Thi cho lịch thi', () => {
+    expect(calendarSummaryForSemester('20261', 'exam')).toBe('HK-20261-Thi')
+  })
 })
 
 describe('ensureCalendar', () => {
@@ -106,6 +110,38 @@ describe('pushSessionsToGoogleCalendar', () => {
       '/calendars/cal-1/events',
       expect.objectContaining({
         description: 'Lớp DEMO01 - Nhóm 101\nGV: Nguyễn Văn A',
+      }),
+    )
+  })
+
+  it('tạo sự kiện lịch thi với tiêu đề [Thi] và mô tả riêng', async () => {
+    const sessions = [
+      makeSession({
+        id: 'EXAM_TST101_1_1_2025-12-16',
+        kind: 'exam',
+        room: 'CS2.A206',
+        className: '',
+        description: 'Nhóm thi 1 - Tổ thi 1\nCơ sở 2.1',
+        startTime: '07:30',
+        endTime: '09:00',
+        date: '2025-12-16',
+      }),
+    ]
+    const get = vi.fn().mockResolvedValue({ data: { items: [] } })
+    const post = vi.fn().mockResolvedValue({ data: {} })
+    vi.spyOn(axios, 'create').mockReturnValue({ get, post } as never)
+
+    const colorMap = buildSubjectColorMap(sessions)
+    await pushSessionsToGoogleCalendar('token', 'cal-1', sessions, 45, colorMap)
+
+    expect(post).toHaveBeenCalledWith(
+      '/calendars/cal-1/events',
+      expect.objectContaining({
+        summary: '[Thi] Nhập môn kiểm thử (TST101)',
+        location: 'CS2.A206',
+        description: 'Nhóm thi 1 - Tổ thi 1\nCơ sở 2.1',
+        start: { dateTime: '2025-12-16T07:30:00', timeZone: 'Asia/Ho_Chi_Minh' },
+        end: { dateTime: '2025-12-16T09:00:00', timeZone: 'Asia/Ho_Chi_Minh' },
       }),
     )
   })

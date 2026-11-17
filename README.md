@@ -19,6 +19,14 @@ This is a frontend-only project (React + Vite + TypeScript) with no backend — 
 2. Export/download it as an Excel file (`.xlsx`) — columns: `Mã MH`, `Tên môn học`, `Nhóm tổ`, `Số tín chỉ`, `Lớp`, `Thứ`, `Tiết bắt đầu`, `Số tiết`, `Phòng`, `Giảng viên`, `Thời gian học`.
 3. Upload that file on the FTU2 Calendar page.
 
+### Exam schedule (lịch thi)
+
+The same upload box also accepts the exam schedule Excel file (columns: `Mã MH`, `Tên môn học`, `Nhóm thi`, `Tổ thi`, `Ngày thi`, `Giờ bắt đầu`, `Phòng thi`, plus optional `Cơ sở` and `Hình thức thi`). It is detected automatically from its columns:
+
+- Each exam becomes one event titled `[Thi] <subject> (<code>)`, located at `Phòng thi`.
+- The file has no end time, so every exam is created as 90 minutes long (`EXAM_DURATION_MINUTES` in `src/lib/parseExamExcel.ts`).
+- Exams go into a separate calendar named `HK-<semester code>-Thi` (e.g. `HK-20261-Thi`).
+
 > This file is only ever processed in your browser — it's never sent anywhere except the Google Calendar API.
 
 ## Requirements

@@ -18,7 +18,8 @@ vi.mock('../lib/googleAuth', () => ({
 }))
 
 vi.mock('../lib/googleCalendar', () => ({
-  calendarSummaryForSemester: (semester: string) => `HK-${semester}`,
+  calendarSummaryForSemester: (semester: string, kind?: 'class' | 'exam') =>
+    kind === 'exam' ? `HK-${semester}-Thi` : `HK-${semester}`,
   ensureCalendar: vi.fn(),
   pushSessionsToGoogleCalendar: vi.fn(),
 }))
@@ -74,6 +75,20 @@ describe('CalendarConfigStep', () => {
 
     expect(screen.getByText(/sẽ tạo 2 buổi học/i)).toHaveTextContent(
       'Sẽ tạo 2 buổi học, từ 08/09/2025 đến 09/09/2025.',
+    )
+  })
+
+  it('với lịch thi: tên calendar có hậu tố -Thi và tóm tắt ghi "buổi thi"', () => {
+    const examSchedule: ParsedSchedule = {
+      kind: 'exam',
+      semester: '20261',
+      sessions: [{ ...schedule.sessions[0], kind: 'exam' }],
+    }
+    render(<CalendarConfigStep schedule={examSchedule} onBack={vi.fn()} />)
+
+    expect(screen.getByLabelText(/tên calendar/i)).toHaveValue('HK-20261-Thi')
+    expect(screen.getByText(/sẽ tạo 1 buổi thi/i)).toHaveTextContent(
+      'Sẽ tạo 1 buổi thi, từ 08/09/2025 đến 08/09/2025.',
     )
   })
 

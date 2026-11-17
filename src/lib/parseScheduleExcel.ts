@@ -1,5 +1,7 @@
 import { read, utils } from 'xlsx'
 import type { ClassSession, ParsedSchedule } from '../types/schedule'
+import { isExamHeader, parseExamRows } from './parseExamExcel'
+import { formatDate, inferSemester } from './semester'
 
 const PERIOD_TIMES: Record<number, { start: string; end: string }> = {
   1: { start: '06:45', end: '07:30' },
@@ -54,27 +56,12 @@ function parseDateRange(value: unknown): { start: Date; end: Date } {
   }
 }
 
-function formatDate(date: Date): string {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
 function periodTime(period: number, subjectCode: string): { start: string; end: string } {
   const time = PERIOD_TIMES[period]
   if (!time) {
     throw new Error(`Không tìm thấy giờ cho tiết ${period} của môn ${subjectCode}.`)
   }
   return time
-}
-
-function inferSemester(earliest: Date): string {
-  const month = earliest.getMonth() + 1
-  const year = earliest.getFullYear()
-  if (month >= 8) return `${year}1`
-  if (month <= 5) return `${year - 1}2`
-  return `${year - 1}3`
 }
 
 export function parseScheduleWorkbook(buffer: ArrayBuffer): ParsedSchedule {
@@ -88,6 +75,10 @@ export function parseScheduleWorkbook(buffer: ArrayBuffer): ParsedSchedule {
   const rows = utils.sheet_to_json<ExcelRow>(sheet, { defval: '' })
   if (rows.length === 0) {
     throw new Error('File Excel không có dữ liệu.')
+  }
+
+  if (isExamHeader(rows[0])) {
+    return parseExamRows(rows)
   }
 
   for (const column of REQUIRED_COLUMNS) {
