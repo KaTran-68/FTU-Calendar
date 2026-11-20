@@ -4,11 +4,19 @@ import type { PushProgress } from '../lib/googleCalendar'
 interface ProgressPanelProps {
   progress: PushProgress
   semester: string
+  /** Số buổi cũ đã xóa; chỉ truyền khi người dùng bật "xóa lịch cũ". */
+  deleted?: number
   onClose: () => void
   onRetry?: () => void
 }
 
-export function ProgressPanel({ progress, semester, onClose, onRetry }: ProgressPanelProps) {
+export function ProgressPanel({
+  progress,
+  semester,
+  deleted,
+  onClose,
+  onRetry,
+}: ProgressPanelProps) {
   const success = progress.failed === 0
 
   return (
@@ -22,6 +30,9 @@ export function ProgressPanel({ progress, semester, onClose, onRetry }: Progress
         {progress.skipped > 0 ? `, bỏ qua ${progress.skipped} buổi đã có` : ''}
         {progress.failed > 0 ? `, lỗi ${progress.failed} buổi` : ''}.
       </p>
+      {deleted !== undefined && (
+        <p className="progress-panel__summary">Đã xóa {deleted} buổi cũ trước khi tạo lại.</p>
+      )}
       <div className="progress-panel__actions">
         <a
           className="progress-panel__link"
