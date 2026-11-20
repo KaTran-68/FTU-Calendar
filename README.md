@@ -32,7 +32,7 @@ The same upload box also accepts the exam schedule Excel file (columns: `Mã MH`
 
 ## Requirements
 
-- Node.js 20+
+- Node.js 22+ (the test environment, jsdom 30, needs 22.22 or newer)
 - A Google Cloud OAuth Client ID
 
 ## Install & run locally
