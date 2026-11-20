@@ -7,6 +7,7 @@ import { AUTO_COLOR_IDS, buildSubjectColorMap, shuffleColorOrder } from '../lib/
 import { requestGoogleAccessToken } from '../lib/googleAuth'
 import {
   calendarSummaryForSemester,
+  deleteAppEvents,
   ensureCalendar,
   pushSessionsToGoogleCalendar,
   type PushProgress,
@@ -16,7 +17,7 @@ import type { ParsedSchedule } from '../types/schedule'
 const MIN_REMINDER_MINUTES = 0
 const MAX_REMINDER_MINUTES = 40320
 
-type Status = 'idle' | 'authorizing' | 'pushing'
+type Status = 'idle' | 'authorizing' | 'deleting' | 'pushing'
 
 function formatDisplayDate(iso: string): string {
   const [year, month, day] = iso.split('-')
@@ -44,6 +45,8 @@ export function CalendarConfigStep({
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [status, setStatus] = useState<Status>('idle')
   const [progress, setProgress] = useState<PushProgress | null>(null)
+  const [replaceOld, setReplaceOld] = useState(false)
+  const [deletedCount, setDeletedCount] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const subjects = useMemo(() => {
@@ -71,10 +74,24 @@ export function CalendarConfigStep({
     }
   }, [schedule])
 
-  async function runPush(token: string) {
+  async function runPush(token: string, deleteOldFirst: boolean) {
     setStatus('pushing')
     try {
       const calendarId = await ensureCalendar(token, calendarName.trim())
+
+      if (deleteOldFirst) {
+        setStatus('deleting')
+        const deletion = await deleteAppEvents(token, calendarId)
+        if (deletion.failed > 0) {
+          setError(
+            `Không xóa được ${deletion.failed} buổi cũ nên chưa tạo lịch mới. Hãy bấm "Xác nhận tạo lịch" để thử lại.`,
+          )
+          return
+        }
+        setDeletedCount(deletion.deleted)
+        setStatus('pushing')
+      }
+
       const finalProgress = await pushSessionsToGoogleCalendar(
         token,
         calendarId,
@@ -95,6 +112,7 @@ export function CalendarConfigStep({
     event.preventDefault()
     setError(null)
     setProgress(null)
+    setDeletedCount(null)
 
     if (!calendarName.trim()) {
       setError('Vui lòng nhập tên calendar.')
@@ -128,14 +146,15 @@ export function CalendarConfigStep({
       setAccessToken(token)
     }
 
-    await runPush(token)
+    await runPush(token, replaceOld)
   }
 
   function handleRetry() {
     if (!accessToken) return
     setError(null)
     setProgress(null)
-    void runPush(accessToken)
+    // Các buổi cũ đã được xóa ở lượt đầu; thử lại chỉ tạo nốt buổi lỗi, không xóa lại buổi vừa tạo.
+    void runPush(accessToken, false)
   }
 
   return (
@@ -187,6 +206,25 @@ export function CalendarConfigStep({
         {formatDisplayDate(sessionSummary.from)} đến {formatDisplayDate(sessionSummary.to)}.
       </p>
 
+      <div className="field-check">
+        <label className="field-check__label" htmlFor="replace-old">
+          <input
+            id="replace-old"
+            type="checkbox"
+            checked={replaceOld}
+            disabled={status !== 'idle'}
+            onChange={(event) => setReplaceOld(event.target.checked)}
+          />
+          <span className="field-check__text">
+            <strong>Xóa các buổi cũ rồi tạo lại</strong>
+            <span>
+              Dùng khi trường đổi lịch. Chỉ xóa các buổi do app tạo trong calendar này, không xóa sự
+              kiện bạn tự thêm. Không hoàn tác được.
+            </span>
+          </span>
+        </label>
+      </div>
+
       <ColorPreview
         subjects={subjects}
         colorMap={colorMap}
@@ -202,6 +240,7 @@ export function CalendarConfigStep({
       <button type="submit" disabled={status !== 'idle'}>
         <FiCheck aria-hidden="true" />
         {status === 'authorizing' && 'Đang đăng nhập Google...'}
+        {status === 'deleting' && 'Đang xóa lịch cũ...'}
         {status === 'pushing' && 'Đang tạo lịch...'}
         {status === 'idle' && 'Xác nhận tạo lịch'}
       </button>
@@ -217,7 +256,9 @@ export function CalendarConfigStep({
             <div className="modal-loading">
               <span className="modal-loading__spinner" aria-hidden="true" />
               <p className="modal-loading__text">
-                {status === 'authorizing' ? 'Đang đăng nhập Google...' : 'Đang tạo lịch...'}
+                {status === 'authorizing' && 'Đang đăng nhập Google...'}
+                {status === 'deleting' && 'Đang xóa các buổi cũ...'}
+                {status === 'pushing' && 'Đang tạo lịch...'}
               </p>
               {status === 'pushing' && progress && (
                 <p className="modal-loading__count">
@@ -230,6 +271,7 @@ export function CalendarConfigStep({
               <ProgressPanel
                 progress={progress}
                 semester={schedule.semester}
+                deleted={deletedCount ?? undefined}
                 onClose={() => setProgress(null)}
                 onRetry={progress.failed > 0 ? handleRetry : undefined}
               />

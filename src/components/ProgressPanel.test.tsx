@@ -31,6 +31,31 @@ describe('ProgressPanel', () => {
     expect(screen.queryByText(/lỗi/)).not.toBeInTheDocument()
   })
 
+  it('hiển thị số buổi cũ đã xóa khi có bật xóa lịch cũ', () => {
+    render(
+      <ProgressPanel
+        progress={{ total: 3, created: 3, skipped: 0, failed: 0 }}
+        semester="20261"
+        deleted={5}
+        onClose={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText(/đã xóa 5 buổi cũ/i)).toBeInTheDocument()
+  })
+
+  it('không nhắc đến việc xóa khi không bật xóa lịch cũ', () => {
+    render(
+      <ProgressPanel
+        progress={{ total: 3, created: 3, skipped: 0, failed: 0 }}
+        semester="20261"
+        onClose={vi.fn()}
+      />,
+    )
+
+    expect(screen.queryByText(/buổi cũ/i)).not.toBeInTheDocument()
+  })
+
   it('gọi onClose khi bấm nút Đóng', () => {
     const onClose = vi.fn()
     render(

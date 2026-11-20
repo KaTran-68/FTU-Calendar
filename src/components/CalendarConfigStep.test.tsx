@@ -2,7 +2,11 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { CalendarConfigStep } from './CalendarConfigStep'
 import { requestGoogleAccessToken } from '../lib/googleAuth'
-import { ensureCalendar, pushSessionsToGoogleCalendar } from '../lib/googleCalendar'
+import {
+  deleteAppEvents,
+  ensureCalendar,
+  pushSessionsToGoogleCalendar,
+} from '../lib/googleCalendar'
 import type { ParsedSchedule } from '../types/schedule'
 
 vi.mock('../lib/colors', async () => {
@@ -20,6 +24,7 @@ vi.mock('../lib/googleAuth', () => ({
 vi.mock('../lib/googleCalendar', () => ({
   calendarSummaryForSemester: (semester: string, kind?: 'class' | 'exam') =>
     kind === 'exam' ? `HK-${semester}-Thi` : `HK-${semester}`,
+  deleteAppEvents: vi.fn(),
   ensureCalendar: vi.fn(),
   pushSessionsToGoogleCalendar: vi.fn(),
 }))
@@ -58,6 +63,7 @@ afterEach(() => {
   vi.mocked(requestGoogleAccessToken).mockReset()
   vi.mocked(ensureCalendar).mockReset()
   vi.mocked(pushSessionsToGoogleCalendar).mockReset()
+  vi.mocked(deleteAppEvents).mockReset()
 })
 
 describe('CalendarConfigStep', () => {
@@ -203,6 +209,75 @@ describe('CalendarConfigStep', () => {
     expect(await screen.findByText(/2\/2/)).toBeInTheDocument()
     expect(requestGoogleAccessToken).toHaveBeenCalledTimes(1)
     expect(pushSessionsToGoogleCalendar).toHaveBeenCalledTimes(2)
+  })
+
+  describe('xóa các buổi cũ rồi tạo lại', () => {
+    const doneProgress = { total: 2, created: 2, skipped: 0, failed: 0 }
+
+    it('ô tick mặc định tắt và không xóa gì khi chưa tick', async () => {
+      vi.mocked(requestGoogleAccessToken).mockResolvedValue('token-abc')
+      vi.mocked(ensureCalendar).mockResolvedValue('cal-1')
+      vi.mocked(pushSessionsToGoogleCalendar).mockResolvedValue(doneProgress)
+
+      render(<CalendarConfigStep schedule={schedule} onBack={vi.fn()} clientId="test-client-id" />)
+
+      expect(screen.getByRole('checkbox', { name: /xóa các buổi cũ/i })).not.toBeChecked()
+
+      fireEvent.click(screen.getByRole('button', { name: /xác nhận tạo lịch/i }))
+      await screen.findByText(/2\/2/)
+
+      expect(deleteAppEvents).not.toHaveBeenCalled()
+      expect(screen.queryByText(/đã xóa \d+ buổi cũ/i)).not.toBeInTheDocument()
+    })
+
+    it('khi tick: xóa buổi cũ trước, rồi mới tạo lại, và hiển thị số buổi đã xóa', async () => {
+      vi.mocked(requestGoogleAccessToken).mockResolvedValue('token-abc')
+      vi.mocked(ensureCalendar).mockResolvedValue('cal-1')
+      vi.mocked(deleteAppEvents).mockResolvedValue({ total: 5, deleted: 5, failed: 0 })
+      vi.mocked(pushSessionsToGoogleCalendar).mockResolvedValue(doneProgress)
+
+      render(<CalendarConfigStep schedule={schedule} onBack={vi.fn()} clientId="test-client-id" />)
+      fireEvent.click(screen.getByRole('checkbox', { name: /xóa các buổi cũ/i }))
+      fireEvent.click(screen.getByRole('button', { name: /xác nhận tạo lịch/i }))
+
+      expect(await screen.findByText(/đã xóa 5 buổi cũ/i)).toBeInTheDocument()
+      expect(deleteAppEvents).toHaveBeenCalledWith('token-abc', 'cal-1')
+      expect(vi.mocked(deleteAppEvents).mock.invocationCallOrder[0]).toBeLessThan(
+        vi.mocked(pushSessionsToGoogleCalendar).mock.invocationCallOrder[0],
+      )
+    })
+
+    it('dừng và không tạo lịch mới khi còn buổi cũ không xóa được', async () => {
+      vi.mocked(requestGoogleAccessToken).mockResolvedValue('token-abc')
+      vi.mocked(ensureCalendar).mockResolvedValue('cal-1')
+      vi.mocked(deleteAppEvents).mockResolvedValue({ total: 5, deleted: 3, failed: 2 })
+
+      render(<CalendarConfigStep schedule={schedule} onBack={vi.fn()} clientId="test-client-id" />)
+      fireEvent.click(screen.getByRole('checkbox', { name: /xóa các buổi cũ/i }))
+      fireEvent.click(screen.getByRole('button', { name: /xác nhận tạo lịch/i }))
+
+      expect(await screen.findByRole('alert')).toHaveTextContent('Không xóa được 2 buổi cũ')
+      expect(pushSessionsToGoogleCalendar).not.toHaveBeenCalled()
+    })
+
+    it('bấm Thử lại buổi lỗi không xóa lại những buổi vừa tạo', async () => {
+      vi.mocked(requestGoogleAccessToken).mockResolvedValue('token-abc')
+      vi.mocked(ensureCalendar).mockResolvedValue('cal-1')
+      vi.mocked(deleteAppEvents).mockResolvedValue({ total: 5, deleted: 5, failed: 0 })
+      vi.mocked(pushSessionsToGoogleCalendar)
+        .mockResolvedValueOnce({ total: 2, created: 1, skipped: 0, failed: 1 })
+        .mockResolvedValueOnce(doneProgress)
+
+      render(<CalendarConfigStep schedule={schedule} onBack={vi.fn()} clientId="test-client-id" />)
+      fireEvent.click(screen.getByRole('checkbox', { name: /xóa các buổi cũ/i }))
+      fireEvent.click(screen.getByRole('button', { name: /xác nhận tạo lịch/i }))
+
+      fireEvent.click(await screen.findByRole('button', { name: /thử lại buổi lỗi/i }))
+
+      expect(await screen.findByText(/2\/2/)).toBeInTheDocument()
+      expect(deleteAppEvents).toHaveBeenCalledTimes(1)
+      expect(pushSessionsToGoogleCalendar).toHaveBeenCalledTimes(2)
+    })
   })
 
   it('hiển thị lỗi thân thiện khi đăng nhập Google thất bại', async () => {

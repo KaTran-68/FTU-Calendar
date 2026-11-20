@@ -104,11 +104,14 @@ export async function ensureCalendar(accessToken: string, summary: string): Prom
   return data.id
 }
 
-async function fetchExistingFtuIds(
-  client: AxiosInstance,
-  calendarId: string,
-): Promise<Set<string>> {
-  const ids = new Set<string>()
+interface AppEvent {
+  eventId: string
+  ftuId: string
+}
+
+/** Liệt kê các sự kiện do app tạo (có ftuId) trong calendar; bỏ qua sự kiện người dùng tự thêm. */
+async function fetchAppEvents(client: AxiosInstance, calendarId: string): Promise<AppEvent[]> {
+  const events: AppEvent[] = []
 
   let pageToken: string | undefined
   do {
@@ -116,15 +119,66 @@ async function fetchExistingFtuIds(
       params: { pageToken, maxResults: 250 },
     })
     for (const event of (data.items ?? []) as {
+      id: string
       extendedProperties?: { private?: { ftuId?: string } }
     }[]) {
       const ftuId = event.extendedProperties?.private?.ftuId
-      if (ftuId) ids.add(ftuId)
+      if (ftuId) events.push({ eventId: event.id, ftuId })
     }
     pageToken = data.nextPageToken
   } while (pageToken)
 
-  return ids
+  return events
+}
+
+async function fetchExistingFtuIds(
+  client: AxiosInstance,
+  calendarId: string,
+): Promise<Set<string>> {
+  const events = await fetchAppEvents(client, calendarId)
+  return new Set(events.map((event) => event.ftuId))
+}
+
+function isAlreadyGoneError(error: unknown): boolean {
+  if (!axios.isAxiosError(error)) return false
+  const status = error.response?.status
+  return status === 404 || status === 410
+}
+
+export interface DeleteProgress {
+  total: number
+  deleted: number
+  failed: number
+}
+
+/** Xóa mọi sự kiện do app tạo trong calendar. Không đụng tới calendar hay sự kiện tự thêm. */
+export async function deleteAppEvents(
+  accessToken: string,
+  calendarId: string,
+): Promise<DeleteProgress> {
+  const client = createClient(accessToken)
+  const events = await fetchAppEvents(client, calendarId)
+
+  const result: DeleteProgress = { total: events.length, deleted: 0, failed: 0 }
+
+  await runWithConcurrency(events, MAX_CONCURRENCY, async (event) => {
+    try {
+      await withRetry(() =>
+        client.delete(
+          `/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(event.eventId)}`,
+        ),
+      )
+      result.deleted += 1
+    } catch (error) {
+      if (isAlreadyGoneError(error)) {
+        result.deleted += 1
+      } else {
+        result.failed += 1
+      }
+    }
+  })
+
+  return result
 }
 
 function buildEventBody(session: ClassSession, colorId: string, reminderMinutes: number) {

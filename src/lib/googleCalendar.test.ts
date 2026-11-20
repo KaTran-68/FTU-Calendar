@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { buildSubjectColorMap } from './colors'
 import {
   calendarSummaryForSemester,
+  deleteAppEvents,
   ensureCalendar,
   pushSessionsToGoogleCalendar,
 } from './googleCalendar'
@@ -64,6 +65,72 @@ describe('ensureCalendar', () => {
       summary: 'HK-20261',
       timeZone: 'Asia/Ho_Chi_Minh',
     })
+  })
+})
+
+describe('deleteAppEvents', () => {
+  function eventOf(id: string, ftuId?: string) {
+    return ftuId ? { id, extendedProperties: { private: { ftuId } } } : { id }
+  }
+
+  it('chỉ xóa sự kiện do app tạo (có ftuId), kể cả khi danh sách có nhiều trang', async () => {
+    const get = vi
+      .fn()
+      .mockResolvedValueOnce({
+        data: { items: [eventOf('e1', 'a'), eventOf('manual')], nextPageToken: 'page-2' },
+      })
+      .mockResolvedValueOnce({ data: { items: [eventOf('e2', 'b')] } })
+    const del = vi.fn().mockResolvedValue({})
+    vi.spyOn(axios, 'create').mockReturnValue({ get, delete: del } as never)
+
+    const result = await deleteAppEvents('token', 'cal-1')
+
+    expect(result).toEqual({ total: 2, deleted: 2, failed: 0 })
+    expect(del).toHaveBeenCalledTimes(2)
+    expect(del).toHaveBeenCalledWith('/calendars/cal-1/events/e1')
+    expect(del).toHaveBeenCalledWith('/calendars/cal-1/events/e2')
+    expect(del).not.toHaveBeenCalledWith('/calendars/cal-1/events/manual')
+  })
+
+  it('không xóa gì khi calendar chưa có sự kiện nào của app', async () => {
+    const get = vi.fn().mockResolvedValue({ data: { items: [eventOf('manual')] } })
+    const del = vi.fn()
+    vi.spyOn(axios, 'create').mockReturnValue({ get, delete: del } as never)
+
+    const result = await deleteAppEvents('token', 'cal-1')
+
+    expect(result).toEqual({ total: 0, deleted: 0, failed: 0 })
+    expect(del).not.toHaveBeenCalled()
+  })
+
+  it('coi sự kiện đã bị xóa từ trước (410/404) là đã xóa xong', async () => {
+    const get = vi.fn().mockResolvedValue({ data: { items: [eventOf('e1', 'a')] } })
+    const gone = Object.assign(new Error('gone'), {
+      isAxiosError: true,
+      response: { status: 410, data: {} },
+    })
+    const del = vi.fn().mockRejectedValue(gone)
+    vi.spyOn(axios, 'create').mockReturnValue({ get, delete: del } as never)
+
+    const result = await deleteAppEvents('token', 'cal-1')
+
+    expect(result).toEqual({ total: 1, deleted: 1, failed: 0 })
+  })
+
+  it('đếm vào failed khi lỗi không thể thử lại', async () => {
+    const get = vi.fn().mockResolvedValue({
+      data: { items: [eventOf('e1', 'a'), eventOf('e2', 'b')] },
+    })
+    const forbidden = Object.assign(new Error('bad request'), {
+      isAxiosError: true,
+      response: { status: 400, data: {} },
+    })
+    const del = vi.fn().mockRejectedValueOnce(forbidden).mockResolvedValueOnce({})
+    vi.spyOn(axios, 'create').mockReturnValue({ get, delete: del } as never)
+
+    const result = await deleteAppEvents('token', 'cal-1')
+
+    expect(result).toEqual({ total: 2, deleted: 1, failed: 1 })
   })
 })
 

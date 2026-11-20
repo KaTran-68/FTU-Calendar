@@ -12,6 +12,7 @@ This is a frontend-only project (React + Vite + TypeScript) with no backend — 
 - Each subject gets its own color.
 - Shows live progress as events are created.
 - Running it again with the same data won't create duplicate events.
+- If the school changes the schedule, tick **"Xóa các buổi cũ rồi tạo lại"** (delete old sessions and recreate) before confirming. It deletes only the events this app created in that calendar (those carrying an `ftuId`), never the calendar itself or events you added by hand, then recreates everything from the new file. This can't be undone from the app.
 
 ## How to get the schedule data
 
