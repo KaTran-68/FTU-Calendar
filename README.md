@@ -8,7 +8,7 @@ This is a frontend-only project (React + Vite + TypeScript) with no backend — 
 
 - Sign in with Google, upload the schedule Excel file, and push the whole semester onto your calendar in one click.
 - Choose how many minutes before each class you want to be reminded (e.g. 45 minutes).
-- Creates a dedicated Google Calendar (named `HK-<semester code>`, e.g. `HK-20261`) and pushes every session into it — kept separate from your personal calendar.
+- Creates a dedicated Google Calendar (named `HK-<semester code>`, e.g. `HK-20261`) and pushes every session into it — kept separate from your personal calendar. The **Học kỳ** field is pre-filled from the file's earliest date; you type only the 5-digit code (e.g. `20261`) and the app builds the calendar name itself. Running again with the same code reuses the same calendar.
 - Each subject gets its own color.
 - Shows live progress as events are created.
 - Running it again with the same data won't create duplicate events.

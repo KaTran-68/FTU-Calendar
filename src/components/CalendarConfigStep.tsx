@@ -16,6 +16,8 @@ import type { ParsedSchedule } from '../types/schedule'
 
 const MIN_REMINDER_MINUTES = 0
 const MAX_REMINDER_MINUTES = 40320
+/** Mã học kỳ dạng <năm bắt đầu><số học kỳ>, ví dụ 20261. */
+const SEMESTER_PATTERN = /^\d{5}$/
 
 type Status = 'idle' | 'authorizing' | 'deleting' | 'pushing'
 
@@ -36,9 +38,8 @@ export function CalendarConfigStep({
   clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID,
 }: CalendarConfigStepProps) {
   const isExam = schedule.kind === 'exam'
-  const [calendarName, setCalendarName] = useState(
-    calendarSummaryForSemester(schedule.semester, schedule.kind),
-  )
+  const [semester, setSemester] = useState(schedule.semester)
+  const calendarName = calendarSummaryForSemester(semester.trim(), schedule.kind)
   const [reminderMinutes, setReminderMinutes] = useState(45)
   const [colorOrder, setColorOrder] = useState<string[]>(AUTO_COLOR_IDS)
   const [colorOverrides, setColorOverrides] = useState<Record<string, string>>({})
@@ -77,7 +78,7 @@ export function CalendarConfigStep({
   async function runPush(token: string, deleteOldFirst: boolean) {
     setStatus('pushing')
     try {
-      const calendarId = await ensureCalendar(token, calendarName.trim())
+      const calendarId = await ensureCalendar(token, calendarName)
 
       if (deleteOldFirst) {
         setStatus('deleting')
@@ -114,8 +115,8 @@ export function CalendarConfigStep({
     setProgress(null)
     setDeletedCount(null)
 
-    if (!calendarName.trim()) {
-      setError('Vui lòng nhập tên calendar.')
+    if (!SEMESTER_PATTERN.test(semester.trim())) {
+      setError('Học kỳ gồm 5 chữ số, ví dụ 20261.')
       return
     }
     if (
@@ -171,16 +172,21 @@ export function CalendarConfigStep({
 
       <div className="field-row">
         <div className="field">
-          <label htmlFor="calendar-name">Tên Calendar</label>
+          <label htmlFor="semester">Học kỳ</label>
           <div className="field__input-wrap">
             <FiEdit3 aria-hidden="true" />
             <input
-              id="calendar-name"
+              id="semester"
               type="text"
-              value={calendarName}
-              onChange={(event) => setCalendarName(event.target.value)}
+              inputMode="numeric"
+              placeholder="20261"
+              value={semester}
+              onChange={(event) => setSemester(event.target.value)}
             />
           </div>
+          <small className="field__hint">
+            Calendar sẽ là: <strong>{calendarName}</strong>
+          </small>
         </div>
 
         <div className="field">

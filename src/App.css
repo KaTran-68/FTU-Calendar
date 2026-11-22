@@ -326,6 +326,15 @@
   color: var(--color-red-dark);
 }
 
+.field__hint {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+
+.field__hint strong {
+  color: var(--color-ink);
+}
+
 .input-tabs {
   display: flex;
   gap: 6px;
