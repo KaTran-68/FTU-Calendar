@@ -30,7 +30,9 @@ The same upload box also accepts the exam schedule Excel file (columns: `Mã MH`
 
 #### Paste instead of exporting Excel
 
-For the exam schedule you can skip the Excel export: open the **Xem lịch thi** page, press Ctrl+A then Ctrl+C, and paste it into the **Dán nội dung** tab. The copied page text is tab-separated, so the app finds the table header (`Ngày thi` + `Giờ bắt đầu`), reads each exam row by column name (`parseExamText` in `src/lib/parseExamExcel.ts`) and ignores the menu and statistics around the table. The rest of the flow is identical to the Excel upload. Pasting is only supported for the exam schedule, not the class timetable.
+You can skip the Excel export for both the exam schedule and the class timetable: open the **Xem lịch thi** or **Thời khóa biểu dạng học kỳ** page, press Ctrl+A then Ctrl+C, and paste it into the **Dán nội dung** tab. The copied page text is tab-separated, so the app finds the table header, reads each row by column name (`parseScheduleText` in `src/lib/parseScheduleExcel.ts`, which picks the exam or timetable reader automatically) and ignores the menu and statistics around the table. The rest of the flow is identical to the Excel upload, and the generated session ids are the same, so pasting and uploading the same schedule never creates duplicates.
+
+On the timetable page the portal only shows the first five columns (`Mã MH`, `Tên môn học`, `Nhóm tổ`, `Số tín chỉ`, `Lớp`) on a subject's first row; the later rows of that subject have just the remaining 7 cells. The app re-attaches those five columns from the previous full row. Subjects with no timetable (0 periods, no dates, e.g. `Tiếng Anh đầu khóa`) are skipped, for pasted text and Excel files alike.
 
 > This file is only ever processed in your browser — it's never sent anywhere except the Google Calendar API.
 

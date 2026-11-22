@@ -4,7 +4,10 @@ import { ScheduleInputStep } from './ScheduleInputStep'
 import { parseScheduleExcelFile } from '../lib/parseScheduleExcel'
 import type { ParsedSchedule } from '../types/schedule'
 
-vi.mock('../lib/parseScheduleExcel', () => ({
+vi.mock('../lib/parseScheduleExcel', async () => ({
+  ...(await vi.importActual<typeof import('../lib/parseScheduleExcel')>(
+    '../lib/parseScheduleExcel',
+  )),
   parseScheduleExcelFile: vi.fn(),
 }))
 
@@ -155,6 +158,17 @@ describe('ScheduleInputStep', () => {
       expect(dialog.queryByRole('heading', { name: 'Thời khoá biểu' })).not.toBeInTheDocument()
     })
 
+    it('tab Dán nội dung hướng dẫn cả lịch thi và thời khóa biểu', () => {
+      render(<ScheduleInputStep onParsed={vi.fn()} />)
+      const dialog = openGuide()
+
+      fireEvent.click(dialog.getByRole('tab', { name: /dán nội dung/i }))
+
+      expect(dialog.getByText(/xem lịch thi/i)).toBeInTheDocument()
+      expect(dialog.getByText(/thời khóa biểu dạng học kỳ/i)).toBeInTheDocument()
+      expect(dialog.queryByText(/chỉ dùng cho lịch thi/i)).not.toBeInTheDocument()
+    })
+
     it('mở hướng dẫn khi đang ở tab Dán nội dung thì vào thẳng tab dán', () => {
       render(<ScheduleInputStep onParsed={vi.fn()} />)
       fireEvent.click(screen.getByRole('tab', { name: /dán nội dung/i }))
@@ -226,6 +240,56 @@ describe('ScheduleInputStep', () => {
       expect(parseScheduleExcelFile).not.toHaveBeenCalled()
     })
 
+    it('gọi onParsed với thời khóa biểu đọc từ nội dung đã dán, ghép cả dòng rút gọn', async () => {
+      const timetableText = [
+        [
+          'Mã MH',
+          'Tên môn học',
+          'Nhóm tổ',
+          'Số tín chỉ',
+          'Lớp',
+          'Thứ',
+          'Tiết bắt đầu',
+          'Số tiết',
+          'Phòng',
+          'Giảng viên',
+          'Thời gian học',
+          'Cơ sở',
+        ].join(TAB),
+        [
+          'TOA105',
+          'Toán cao cấp',
+          '531',
+          '3',
+          'DC65KTDN01',
+          '2',
+          '7',
+          '3',
+          'PH.B501',
+          'Tú',
+          '07/09/26 đến 07/09/26',
+          '15 đường D5',
+        ].join(TAB),
+        ['4', '7', '3', 'PH.B302', 'Tú', '09/09/26 đến 09/09/26', '15 đường D5'].join(TAB),
+      ].join(String.fromCharCode(10))
+      const onParsed = vi.fn()
+      render(<ScheduleInputStep onParsed={onParsed} />)
+
+      openPasteTab()
+      paste(timetableText)
+      fireEvent.click(screen.getByRole('button', { name: /tạo lịch/i }))
+
+      await vi.waitFor(() => expect(onParsed).toHaveBeenCalledTimes(1))
+      expect(onParsed.mock.calls[0][0]).toMatchObject({
+        semester: '20261',
+        sessions: [
+          { subjectCode: 'TOA105', date: '2026-09-07', room: 'PH.B501' },
+          { subjectCode: 'TOA105', date: '2026-09-09', room: 'PH.B302' },
+        ],
+      })
+      expect(onParsed.mock.calls[0][0].kind).toBeUndefined()
+    })
+
     it('báo lỗi khi bấm Tạo lịch mà chưa dán gì', () => {
       render(<ScheduleInputStep onParsed={vi.fn()} />)
 
@@ -243,7 +307,7 @@ describe('ScheduleInputStep', () => {
       paste('Trang chủ Xem điểm Xem học phí')
       fireEvent.click(screen.getByRole('button', { name: /tạo lịch/i }))
 
-      expect(screen.getByRole('alert')).toHaveTextContent('Không nhận ra lịch thi')
+      expect(screen.getByRole('alert')).toHaveTextContent('Không nhận ra lịch')
       expect(onParsed).not.toHaveBeenCalled()
     })
 

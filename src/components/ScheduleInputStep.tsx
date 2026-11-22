@@ -1,8 +1,7 @@
 import { useState, type DragEvent, type FormEvent } from 'react'
 import { FiCalendar, FiClipboard, FiFileText, FiHelpCircle, FiUpload, FiX } from 'react-icons/fi'
 import { Modal } from './Modal'
-import { parseExamText } from '../lib/parseExamExcel'
-import { parseScheduleExcelFile } from '../lib/parseScheduleExcel'
+import { parseScheduleExcelFile, parseScheduleText } from '../lib/parseScheduleExcel'
 import type { ParsedSchedule } from '../types/schedule'
 
 interface ScheduleInputStepProps {
@@ -82,7 +81,7 @@ export function ScheduleInputStep({ onParsed }: ScheduleInputStepProps) {
     setIsParsing(true)
     try {
       if (mode === 'paste') {
-        onParsed(parseExamText(pastedText))
+        onParsed(parseScheduleText(pastedText))
       } else if (file) {
         onParsed(await parseScheduleExcelFile(file))
       }
@@ -122,7 +121,7 @@ export function ScheduleInputStep({ onParsed }: ScheduleInputStepProps) {
         <div className="field__header">
           <label htmlFor={mode === 'paste' ? 'schedule-text' : undefined}>
             {mode === 'paste'
-              ? 'Nội dung trang lịch thi'
+              ? 'Nội dung trang lịch thi hoặc thời khoá biểu'
               : 'File Excel thời khoá biểu hoặc lịch thi'}
           </label>
           <button type="button" className="field__guide-btn" onClick={openGuide}>
@@ -136,7 +135,7 @@ export function ScheduleInputStep({ onParsed }: ScheduleInputStepProps) {
             className="paste-box"
             value={pastedText}
             onChange={(event) => setPastedText(event.target.value)}
-            placeholder="Mở trang Xem lịch thi trên FtuGate, bấm Ctrl+A rồi Ctrl+C, sau đó dán vào đây (Ctrl+V)."
+            placeholder="Mở trang Xem lịch thi hoặc Thời khóa biểu dạng học kỳ trên FtuGate, bấm Ctrl+A rồi Ctrl+C, sau đó dán vào đây (Ctrl+V)."
             spellCheck={false}
           />
         )}
@@ -274,11 +273,12 @@ export function ScheduleInputStep({ onParsed }: ScheduleInputStepProps) {
               </div>
             ) : (
               <section className="guide-modal__section">
-                <h3>Lịch thi: dán nội dung thay cho file</h3>
+                <h3>Dán nội dung thay cho file</h3>
                 <ol className="guide-modal__steps">
                   <li>
-                    Mở trang <strong>Xem lịch thi</strong> trên FtuGate, chọn Học kỳ và đợt thi, đợi
-                    bảng hiện đủ.
+                    Trên FtuGate, mở trang <strong>Xem lịch thi</strong> hoặc{' '}
+                    <strong>Thời khóa biểu dạng học kỳ</strong>, chọn Học kỳ (và đợt thi nếu là lịch
+                    thi), đợi bảng hiện đủ.
                   </li>
                   <li>
                     Bấm <strong>Ctrl+A</strong> rồi <strong>Ctrl+C</strong> để copy cả trang.
@@ -290,7 +290,7 @@ export function ScheduleInputStep({ onParsed }: ScheduleInputStepProps) {
                   </li>
                 </ol>
                 <p className="guide-modal__note">
-                  Cách dán chỉ dùng cho lịch thi. Thời khoá biểu vẫn cần import file Excel.
+                  App tự nhận ra đó là lịch thi hay thời khoá biểu, không cần chọn loại.
                 </p>
               </section>
             )}

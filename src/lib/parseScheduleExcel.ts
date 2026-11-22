@@ -1,6 +1,6 @@
 import { read, utils } from 'xlsx'
 import type { ClassSession, ParsedSchedule } from '../types/schedule'
-import { isExamHeader, parseExamRows } from './parseExamExcel'
+import { isExamHeader, parseExamRows, parseExamText } from './parseExamExcel'
 import { formatDate, inferSemester } from './semester'
 
 const PERIOD_TIMES: Record<number, { start: string; end: string }> = {
@@ -64,23 +64,7 @@ function periodTime(period: number, subjectCode: string): { start: string; end: 
   return time
 }
 
-export function parseScheduleWorkbook(buffer: ArrayBuffer): ParsedSchedule {
-  const workbook = read(buffer, { type: 'array' })
-  const sheetName = workbook.SheetNames[0]
-  const sheet = sheetName ? workbook.Sheets[sheetName] : undefined
-  if (!sheet) {
-    throw new Error('File Excel không có sheet dữ liệu.')
-  }
-
-  const rows = utils.sheet_to_json<ExcelRow>(sheet, { defval: '' })
-  if (rows.length === 0) {
-    throw new Error('File Excel không có dữ liệu.')
-  }
-
-  if (isExamHeader(rows[0])) {
-    return parseExamRows(rows)
-  }
-
+function parseScheduleRows(rows: ExcelRow[]): ParsedSchedule {
   for (const column of REQUIRED_COLUMNS) {
     if (!(column in rows[0])) {
       throw new Error(`File Excel thiếu cột "${column}". Hãy dùng đúng file export từ FTU2.`)
@@ -93,6 +77,9 @@ export function parseScheduleWorkbook(buffer: ArrayBuffer): ParsedSchedule {
   rows.forEach((row, index) => {
     const subjectCode = toText(row['Mã MH'])
     if (!subjectCode) return
+
+    // Môn không có lịch học (vd "Tiếng Anh đầu khóa": 0 tiết, không có ngày) thì không có gì để tạo.
+    if (!toText(row['Thời gian học']) && !(Number(row['Số tiết']) > 0)) return
 
     const subjectName = toText(row['Tên môn học'])
     const group = toText(row['Nhóm tổ'])
@@ -133,6 +120,85 @@ export function parseScheduleWorkbook(buffer: ArrayBuffer): ParsedSchedule {
   }
 
   return { semester: inferSemester(earliestDate), sessions }
+}
+
+export function parseScheduleWorkbook(buffer: ArrayBuffer): ParsedSchedule {
+  const workbook = read(buffer, { type: 'array' })
+  const sheetName = workbook.SheetNames[0]
+  const sheet = sheetName ? workbook.Sheets[sheetName] : undefined
+  if (!sheet) {
+    throw new Error('File Excel không có sheet dữ liệu.')
+  }
+
+  const rows = utils.sheet_to_json<ExcelRow>(sheet, { defval: '' })
+  if (rows.length === 0) {
+    throw new Error('File Excel không có dữ liệu.')
+  }
+
+  if (isExamHeader(rows[0])) {
+    return parseExamRows(rows)
+  }
+
+  return parseScheduleRows(rows)
+}
+
+/**
+ * Dựng các dòng dữ liệu từ nội dung trang "Thời khóa biểu dạng học kỳ" (Ctrl+A, Ctrl+C). Portal chỉ
+ * ghi các cột thông tin môn (trước cột "Thứ") ở dòng đầu của mỗi môn; các buổi sau chỉ còn các ô từ
+ * "Thứ" trở đi nên được ghép lại với thông tin của dòng đầy đủ liền trước.
+ */
+function parseTimetableText(lines: string[][], headerIndex: number): ParsedSchedule {
+  const header = lines[headerIndex].map((cell) => cell.trim())
+  while (header.length > 0 && header[header.length - 1] === '') header.pop()
+
+  const carriedCount = Math.max(header.indexOf('Thứ'), 0)
+  const rows: ExcelRow[] = []
+  let carried: string[] | null = null
+
+  for (const cells of lines.slice(headerIndex + 1)) {
+    let fullRow: string[]
+    if (cells.length === header.length) {
+      fullRow = cells
+      carried = cells.slice(0, carriedCount)
+    } else if (carried && carriedCount > 0 && cells.length === header.length - carriedCount) {
+      fullRow = [...carried, ...cells]
+    } else {
+      continue
+    }
+    rows.push(Object.fromEntries(header.map((name, index) => [name, fullRow[index]])) as ExcelRow)
+  }
+
+  if (rows.length === 0) {
+    throw new Error('Không tìm thấy buổi học nào trong nội dung đã dán.')
+  }
+  return parseScheduleRows(rows)
+}
+
+/** Đọc lịch từ nội dung trang portal đã copy: tự nhận ra là lịch thi hay thời khóa biểu. */
+export function parseScheduleText(text: string): ParsedSchedule {
+  if (!text.trim()) {
+    throw new Error('Vui lòng dán nội dung trang lịch thi hoặc thời khoá biểu.')
+  }
+
+  const lines = text.split(/\r?\n/).map((line) => line.split('\t'))
+  const hasColumns = (cells: string[], columns: string[]) => {
+    const names = cells.map((cell) => cell.trim())
+    return columns.every((column) => names.includes(column))
+  }
+
+  if (lines.some((cells) => hasColumns(cells, ['Ngày thi', 'Giờ bắt đầu']))) {
+    return parseExamText(text)
+  }
+
+  const headerIndex = lines.findIndex((cells) =>
+    hasColumns(cells, ['Mã MH', 'Tiết bắt đầu', 'Thời gian học']),
+  )
+  if (headerIndex === -1) {
+    throw new Error(
+      'Không nhận ra lịch. Hãy bấm Ctrl+A trên trang Xem lịch thi hoặc Thời khóa biểu dạng học kỳ, Ctrl+C rồi dán lại.',
+    )
+  }
+  return parseTimetableText(lines, headerIndex)
 }
 
 export async function parseScheduleExcelFile(file: File): Promise<ParsedSchedule> {
