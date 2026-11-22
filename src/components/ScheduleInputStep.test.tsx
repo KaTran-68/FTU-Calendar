@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ScheduleInputStep } from './ScheduleInputStep'
 import { parseScheduleExcelFile } from '../lib/parseScheduleExcel'
@@ -106,7 +106,7 @@ describe('ScheduleInputStep', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /hướng dẫn/i }))
 
-    expect(screen.getByText(/cách lấy file excel/i)).toBeInTheDocument()
+    expect(screen.getByText(/hướng dẫn nhập lịch/i)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /ftugate/i })).toHaveAttribute(
       'href',
       'https://ftugate.ftu.edu.vn/#/',
@@ -114,7 +114,59 @@ describe('ScheduleInputStep', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /đã hiểu/i }))
 
-    expect(screen.queryByText(/cách lấy file excel/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/hướng dẫn nhập lịch/i)).not.toBeInTheDocument()
+  })
+
+  describe('modal hướng dẫn có 2 tab', () => {
+    function openGuide() {
+      fireEvent.click(screen.getByRole('button', { name: /hướng dẫn/i }))
+      return within(screen.getByRole('dialog'))
+    }
+
+    it('mặc định ở tab Import Excel: có hướng dẫn thời khoá biểu và lịch thi, chưa có phần dán', () => {
+      render(<ScheduleInputStep onParsed={vi.fn()} />)
+
+      const dialog = openGuide()
+
+      expect(dialog.getByRole('tab', { name: /import excel/i })).toHaveAttribute(
+        'aria-selected',
+        'true',
+      )
+      expect(dialog.getByRole('tab', { name: /dán nội dung/i })).toHaveAttribute(
+        'aria-selected',
+        'false',
+      )
+      expect(dialog.getByRole('heading', { name: 'Thời khoá biểu' })).toBeInTheDocument()
+      expect(dialog.getByRole('heading', { name: 'Lịch thi' })).toBeInTheDocument()
+      expect(dialog.queryByText(/ctrl\+a/i)).not.toBeInTheDocument()
+    })
+
+    it('chuyển sang tab Dán nội dung thì chỉ còn hướng dẫn dán', () => {
+      render(<ScheduleInputStep onParsed={vi.fn()} />)
+      const dialog = openGuide()
+
+      fireEvent.click(dialog.getByRole('tab', { name: /dán nội dung/i }))
+
+      expect(dialog.getByRole('tab', { name: /dán nội dung/i })).toHaveAttribute(
+        'aria-selected',
+        'true',
+      )
+      expect(dialog.getByText(/ctrl\+a/i)).toBeInTheDocument()
+      expect(dialog.queryByRole('heading', { name: 'Thời khoá biểu' })).not.toBeInTheDocument()
+    })
+
+    it('mở hướng dẫn khi đang ở tab Dán nội dung thì vào thẳng tab dán', () => {
+      render(<ScheduleInputStep onParsed={vi.fn()} />)
+      fireEvent.click(screen.getByRole('tab', { name: /dán nội dung/i }))
+
+      const dialog = openGuide()
+
+      expect(dialog.getByRole('tab', { name: /dán nội dung/i })).toHaveAttribute(
+        'aria-selected',
+        'true',
+      )
+      expect(dialog.getByText(/ctrl\+a/i)).toBeInTheDocument()
+    })
   })
 
   describe('tab Dán nội dung', () => {

@@ -29,6 +29,7 @@ export function ScheduleInputStep({ onParsed }: ScheduleInputStepProps) {
   const [error, setError] = useState<string | null>(null)
   const [isParsing, setIsParsing] = useState(false)
   const [isGuideOpen, setIsGuideOpen] = useState(false)
+  const [guideTab, setGuideTab] = useState<InputMode>('file')
 
   function pickFile(candidate: File | null | undefined) {
     if (!candidate) return
@@ -57,6 +58,11 @@ export function ScheduleInputStep({ onParsed }: ScheduleInputStepProps) {
     event.preventDefault()
     setIsDragActive(false)
     pickFile(event.dataTransfer.files[0])
+  }
+
+  function openGuide() {
+    setGuideTab(mode)
+    setIsGuideOpen(true)
   }
 
   function switchMode(next: InputMode) {
@@ -119,7 +125,7 @@ export function ScheduleInputStep({ onParsed }: ScheduleInputStepProps) {
               ? 'Nội dung trang lịch thi'
               : 'File Excel thời khoá biểu hoặc lịch thi'}
           </label>
-          <button type="button" className="field__guide-btn" onClick={() => setIsGuideOpen(true)}>
+          <button type="button" className="field__guide-btn" onClick={openGuide}>
             <FiHelpCircle aria-hidden="true" />
             Hướng dẫn
           </button>
@@ -201,52 +207,93 @@ export function ScheduleInputStep({ onParsed }: ScheduleInputStepProps) {
       {isGuideOpen && (
         <Modal onClose={() => setIsGuideOpen(false)}>
           <div className="guide-modal">
-            <h2 className="guide-modal__title">Cách lấy file Excel</h2>
-            <h3>Thời khoá biểu</h3>
-            <ol className="guide-modal__steps">
-              <li>
-                Đăng nhập vào{' '}
-                <a href="https://ftugate.ftu.edu.vn/#/" target="_blank" rel="noopener noreferrer">
-                  FtuGate
-                </a>
-                .
-              </li>
-              <li>
-                Vào phần <strong>Thời khóa biểu dạng học kỳ</strong> ở thanh menu bên trái.
-              </li>
-              <li>
-                Chọn loại Thời khóa biểu và Học kỳ bạn mong muốn (ví dụ: Học kỳ 1 - Năm học 2026 -
-                2027 và Thời khóa biểu lớp sinh viên).
-              </li>
-              <li>
-                Chọn <strong>"Xuất Excel"</strong> để tải file Excel về.
-              </li>
-            </ol>
-            <h3>Lịch thi</h3>
-            <ol className="guide-modal__steps">
-              <li>
-                Trên FtuGate, vào phần <strong>Lịch thi</strong> ở thanh menu bên trái.
-              </li>
-              <li>Chọn Học kỳ và đợt thi bạn mong muốn.</li>
-              <li>
-                Chọn <strong>"Xuất Excel"</strong> để tải file Excel về. App tự nhận ra file lịch
-                thi và tạo calendar riêng (mỗi buổi thi mặc định kéo dài 90 phút).
-              </li>
-            </ol>
-            <h3>Lịch thi: dán nội dung thay cho file</h3>
-            <ol className="guide-modal__steps">
-              <li>
-                Mở trang <strong>Xem lịch thi</strong>, chọn Học kỳ và đợt thi, đợi bảng hiện đủ.
-              </li>
-              <li>
-                Bấm <strong>Ctrl+A</strong> rồi <strong>Ctrl+C</strong> để copy cả trang.
-              </li>
-              <li>
-                Quay lại đây, chọn tab <strong>Dán nội dung</strong>, bấm <strong>Ctrl+V</strong>{' '}
-                vào ô trống rồi bấm Tạo lịch. Phần menu và thống kê trong nội dung dán sẽ tự bị bỏ
-                qua.
-              </li>
-            </ol>
+            <h2 className="guide-modal__title">Hướng dẫn nhập lịch</h2>
+            <div className="input-tabs" role="tablist" aria-label="Loại hướng dẫn">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={guideTab === 'file'}
+                className={`input-tabs__tab${guideTab === 'file' ? ' input-tabs__tab--active' : ''}`}
+                onClick={() => setGuideTab('file')}
+              >
+                <FiUpload aria-hidden="true" />
+                Import Excel
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={guideTab === 'paste'}
+                className={`input-tabs__tab${guideTab === 'paste' ? ' input-tabs__tab--active' : ''}`}
+                onClick={() => setGuideTab('paste')}
+              >
+                <FiClipboard aria-hidden="true" />
+                Dán nội dung
+              </button>
+            </div>
+            {guideTab === 'file' ? (
+              <div className="guide-modal__sections">
+                <section className="guide-modal__section">
+                  <h3>Thời khoá biểu</h3>
+                  <ol className="guide-modal__steps">
+                    <li>
+                      Đăng nhập vào{' '}
+                      <a
+                        href="https://ftugate.ftu.edu.vn/#/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        FtuGate
+                      </a>
+                      .
+                    </li>
+                    <li>
+                      Vào phần <strong>Thời khóa biểu dạng học kỳ</strong> ở thanh menu bên trái.
+                    </li>
+                    <li>
+                      Chọn loại Thời khóa biểu và Học kỳ bạn mong muốn (ví dụ: Học kỳ 1 - Năm học
+                      2026 - 2027 và Thời khóa biểu lớp sinh viên).
+                    </li>
+                    <li>
+                      Chọn <strong>"Xuất Excel"</strong> để tải file Excel về.
+                    </li>
+                  </ol>
+                </section>
+                <section className="guide-modal__section">
+                  <h3>Lịch thi</h3>
+                  <ol className="guide-modal__steps">
+                    <li>
+                      Trên FtuGate, vào phần <strong>Lịch thi</strong> ở thanh menu bên trái.
+                    </li>
+                    <li>Chọn Học kỳ và đợt thi bạn mong muốn.</li>
+                    <li>
+                      Chọn <strong>"Xuất Excel"</strong> để tải file Excel về. App tự nhận ra file
+                      lịch thi và tạo calendar riêng (mỗi buổi thi mặc định kéo dài 90 phút).
+                    </li>
+                  </ol>
+                </section>
+              </div>
+            ) : (
+              <section className="guide-modal__section">
+                <h3>Lịch thi: dán nội dung thay cho file</h3>
+                <ol className="guide-modal__steps">
+                  <li>
+                    Mở trang <strong>Xem lịch thi</strong> trên FtuGate, chọn Học kỳ và đợt thi, đợi
+                    bảng hiện đủ.
+                  </li>
+                  <li>
+                    Bấm <strong>Ctrl+A</strong> rồi <strong>Ctrl+C</strong> để copy cả trang.
+                  </li>
+                  <li>
+                    Quay lại đây, chọn tab <strong>Dán nội dung</strong>, bấm{' '}
+                    <strong>Ctrl+V</strong> vào ô trống rồi bấm Tạo lịch. Phần menu và thống kê
+                    trong nội dung dán sẽ tự bị bỏ qua.
+                  </li>
+                </ol>
+                <p className="guide-modal__note">
+                  Cách dán chỉ dùng cho lịch thi. Thời khoá biểu vẫn cần import file Excel.
+                </p>
+              </section>
+            )}
             <button
               type="button"
               className="guide-modal__close"
