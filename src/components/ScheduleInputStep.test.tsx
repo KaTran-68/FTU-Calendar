@@ -116,4 +116,95 @@ describe('ScheduleInputStep', () => {
 
     expect(screen.queryByText(/cách lấy file excel/i)).not.toBeInTheDocument()
   })
+
+  describe('tab Dán nội dung', () => {
+    const TAB = String.fromCharCode(9)
+    const PASTED_TEXT = [
+      'Xem lịch thi',
+      [
+        'Stt',
+        'Mã MH',
+        'Tên môn học',
+        'Nhóm thi',
+        'Tổ thi',
+        'Ngày thi',
+        'Giờ bắt đầu',
+        'Phòng thi',
+      ].join(TAB),
+      ['2', 'TOA105', 'Toán cao cấp', '531', '002', '05/12/2026', '15:30', 'CS2.B401'].join(TAB),
+    ].join(String.fromCharCode(10))
+
+    function openPasteTab() {
+      fireEvent.click(screen.getByRole('tab', { name: /dán nội dung/i }))
+    }
+
+    function paste(text: string) {
+      fireEvent.change(screen.getByLabelText(/nội dung trang lịch thi/i), {
+        target: { value: text },
+      })
+    }
+
+    it('chuyển sang ô dán và ẩn ô chọn file', () => {
+      render(<ScheduleInputStep onParsed={vi.fn()} />)
+
+      openPasteTab()
+
+      expect(screen.getByRole('tab', { name: /dán nội dung/i })).toHaveAttribute(
+        'aria-selected',
+        'true',
+      )
+      expect(screen.getByLabelText(/nội dung trang lịch thi/i)).toBeInTheDocument()
+      expect(screen.queryByText(/kéo thả file/i)).not.toBeInTheDocument()
+    })
+
+    it('gọi onParsed với lịch thi đọc từ nội dung đã dán', async () => {
+      const onParsed = vi.fn()
+      render(<ScheduleInputStep onParsed={onParsed} />)
+
+      openPasteTab()
+      paste(PASTED_TEXT)
+      fireEvent.click(screen.getByRole('button', { name: /tạo lịch/i }))
+
+      await vi.waitFor(() => expect(onParsed).toHaveBeenCalledTimes(1))
+      expect(onParsed.mock.calls[0][0]).toMatchObject({
+        kind: 'exam',
+        semester: '20261',
+        sessions: [{ subjectCode: 'TOA105', date: '2026-12-05' }],
+      })
+      expect(parseScheduleExcelFile).not.toHaveBeenCalled()
+    })
+
+    it('báo lỗi khi bấm Tạo lịch mà chưa dán gì', () => {
+      render(<ScheduleInputStep onParsed={vi.fn()} />)
+
+      openPasteTab()
+      fireEvent.click(screen.getByRole('button', { name: /tạo lịch/i }))
+
+      expect(screen.getByRole('alert')).toHaveTextContent('dán nội dung')
+    })
+
+    it('báo lỗi khi nội dung dán không phải lịch thi', () => {
+      const onParsed = vi.fn()
+      render(<ScheduleInputStep onParsed={onParsed} />)
+
+      openPasteTab()
+      paste('Trang chủ Xem điểm Xem học phí')
+      fireEvent.click(screen.getByRole('button', { name: /tạo lịch/i }))
+
+      expect(screen.getByRole('alert')).toHaveTextContent('Không nhận ra lịch thi')
+      expect(onParsed).not.toHaveBeenCalled()
+    })
+
+    it('xoá lỗi cũ khi đổi tab', () => {
+      render(<ScheduleInputStep onParsed={vi.fn()} />)
+
+      openPasteTab()
+      fireEvent.click(screen.getByRole('button', { name: /tạo lịch/i }))
+      expect(screen.getByRole('alert')).toBeInTheDocument()
+
+      fireEvent.click(screen.getByRole('tab', { name: /tải file excel/i }))
+
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    })
+  })
 })

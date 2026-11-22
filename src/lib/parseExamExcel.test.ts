@@ -1,5 +1,6 @@
 import { utils, write } from 'xlsx'
 import { describe, expect, it } from 'vitest'
+import { parseExamText } from './parseExamExcel'
 import { parseScheduleWorkbook } from './parseScheduleExcel'
 
 const HEADER = [
@@ -221,5 +222,138 @@ describe('parseScheduleWorkbook (lịch thi)', () => {
     ])
 
     expect(parseScheduleWorkbook(buffer).sessions[0].endTime).toBe('23:30')
+  })
+})
+
+const PASTE_HEADER = HEADER.join('\t')
+
+function pasteRow(cells: (string | number)[]): string {
+  return cells.join('\t')
+}
+
+/** Nội dung Ctrl+A / Ctrl+C trang "Xem lịch thi" của portal, rút gọn phần menu. */
+const PASTED_PAGE = [
+  'Nguyễn Ngọc Thanh Quyên',
+  '262111110139',
+  'Xem lịch thi',
+  'Xem điểm',
+  'Design byaqtech.vn',
+  '',
+  ' XEM LỊCH THI',
+  'Học kỳ 1 Năm học 2026-2027',
+  'Lịch thi học kỳ cá nhân',
+  PASTE_HEADER,
+  ...Array.from({ length: 12 }, () => '...'),
+  'Kỳ thi: Thi kết thúc môn',
+  pasteRow([
+    1,
+    'ESP111',
+    'Tiếng Anh chuyên ngành 1 (Tiếng Anh thương mại nâng cao)',
+    601,
+    '002',
+    31,
+    '10/11/2026',
+    '13:30',
+    'CS2.A403',
+    2.1,
+    '',
+    'Thi kết hợp trắc nghiệm trên giấy và tự luận',
+    '',
+  ]),
+  pasteRow([
+    2,
+    'TOA105',
+    'Toán cao cấp',
+    531,
+    '002',
+    52,
+    '05/12/2026',
+    '15:30',
+    'CS2.B401',
+    2.1,
+    '',
+    'Tự luận',
+    '',
+  ]),
+  pasteRow([
+    3,
+    'PLU111',
+    'Pháp luật đại cương',
+    525,
+    '002',
+    51,
+    '16/12/2026',
+    '07:30',
+    'CS2.A206',
+    2.1,
+    '',
+    'Tiểu Luận cá nhân',
+    '',
+  ]),
+  'THỐNG KÊ TRUY CẬP',
+  'Đang truy cập',
+  '98',
+  'SV đăng nhập',
+  '83',
+].join('\n')
+
+describe('parseExamText (dán nội dung trang lịch thi)', () => {
+  it('đọc các buổi thi từ nội dung trang, bỏ qua menu, dòng lọc và thống kê', () => {
+    const schedule = parseExamText(PASTED_PAGE)
+
+    expect(schedule.kind).toBe('exam')
+    expect(schedule.semester).toBe('20261')
+    expect(schedule.sessions.map((s) => s.subjectCode)).toEqual(['ESP111', 'TOA105', 'PLU111'])
+  })
+
+  it('giữ đúng cột khi ô "Phòng thi trực tuyến" để trống', () => {
+    const [first, second] = parseExamText(PASTED_PAGE).sessions
+
+    expect(first).toMatchObject({
+      kind: 'exam',
+      subjectName: 'Tiếng Anh chuyên ngành 1 (Tiếng Anh thương mại nâng cao)',
+      group: '601',
+      room: 'CS2.A403',
+      date: '2026-11-10',
+      startTime: '13:30',
+      endTime: '15:00',
+    })
+    expect(first.description).toBe(
+      'Nhóm thi 601 - Tổ thi 002\nCơ sở 2.1\nHình thức: Thi kết hợp trắc nghiệm trên giấy và tự luận',
+    )
+    // Ngày 05/12 không bị đảo thành 12/05 như khi đọc từ ô ngày của Excel.
+    expect(second).toMatchObject({ date: '2026-12-05', startTime: '15:30', endTime: '17:00' })
+  })
+
+  it('chấp nhận xuống dòng kiểu Windows (CRLF)', () => {
+    const schedule = parseExamText(PASTED_PAGE.replaceAll('\n', '\r\n'))
+
+    expect(schedule.sessions).toHaveLength(3)
+    expect(schedule.sessions[2].room).toBe('CS2.A206')
+  })
+
+  it('ném lỗi hướng dẫn khi nội dung trống', () => {
+    expect(() => parseExamText('   \n  ')).toThrow('Vui lòng dán nội dung')
+  })
+
+  it('ném lỗi khi không thấy dòng tiêu đề của bảng lịch thi', () => {
+    expect(() => parseExamText('Trang chủ\nXem điểm\nXem học phí')).toThrow(
+      'Không nhận ra lịch thi',
+    )
+  })
+
+  it('ném lỗi khi có bảng nhưng chưa có buổi thi nào', () => {
+    const text = [PASTE_HEADER, '...', 'Kỳ thi: Thi kết thúc môn'].join('\n')
+
+    expect(() => parseExamText(text)).toThrow('Không tìm thấy buổi thi nào')
+  })
+
+  it('ném lỗi khi ngày thi sai định dạng', () => {
+    const text = [
+      PASTE_HEADER,
+      pasteRow([1, 'A1', 'Môn A', 1, '001', 10, 'sớm', '07:30', 'P1', 2.1, '', '', '']),
+    ].join('\n')
+
+    expect(() => parseExamText(text)).toThrow('Ngày thi')
   })
 })

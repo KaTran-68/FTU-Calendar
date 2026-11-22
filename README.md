@@ -28,6 +28,10 @@ The same upload box also accepts the exam schedule Excel file (columns: `Mã MH`
 - The file has no end time, so every exam is created as 90 minutes long (`EXAM_DURATION_MINUTES` in `src/lib/parseExamExcel.ts`).
 - Exams go into a separate calendar named `HK-<semester code>-Thi` (e.g. `HK-20261-Thi`).
 
+#### Paste instead of exporting Excel
+
+For the exam schedule you can skip the Excel export: open the **Xem lịch thi** page, press Ctrl+A then Ctrl+C, and paste it into the **Dán nội dung** tab. The copied page text is tab-separated, so the app finds the table header (`Ngày thi` + `Giờ bắt đầu`), reads each exam row by column name (`parseExamText` in `src/lib/parseExamExcel.ts`) and ignores the menu and statistics around the table. The rest of the flow is identical to the Excel upload. Pasting is only supported for the exam schedule, not the class timetable.
+
 > This file is only ever processed in your browser — it's never sent anywhere except the Google Calendar API.
 
 ## Requirements

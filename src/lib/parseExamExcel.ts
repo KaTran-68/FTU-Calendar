@@ -65,6 +65,39 @@ export function isExamHeader(row: ExamRow): boolean {
   return 'Ngày thi' in row && 'Giờ bắt đầu' in row
 }
 
+/**
+ * Đọc lịch thi từ nội dung trang "Xem lịch thi" (Ctrl+A, Ctrl+C). Trình duyệt copy bảng thành
+ * text, các ô cách nhau bằng tab; dòng tiêu đề của bảng dùng để ghép tên cột cho từng dòng thi.
+ */
+export function parseExamText(text: string): ParsedSchedule {
+  if (!text.trim()) {
+    throw new Error('Vui lòng dán nội dung trang lịch thi.')
+  }
+
+  const lines = text.split(/\r?\n/).map((line) => line.split('\t'))
+  const headerIndex = lines.findIndex((cells) => {
+    const names = cells.map((cell) => cell.trim())
+    return names.includes('Ngày thi') && names.includes('Giờ bắt đầu')
+  })
+  if (headerIndex === -1) {
+    throw new Error(
+      'Không nhận ra lịch thi. Hãy bấm Ctrl+A trên trang Xem lịch thi, Ctrl+C rồi dán lại.',
+    )
+  }
+
+  const header = lines[headerIndex].map((cell) => cell.trim())
+  // Giữ nguyên ô trống (không lọc) để các cột phía sau không bị lệch.
+  const rows = lines.slice(headerIndex + 1).flatMap((cells): ExamRow[] => {
+    const row = Object.fromEntries(header.map((name, index) => [name, cells[index] ?? '']))
+    return toText(row['Mã MH']) ? [row] : []
+  })
+  if (rows.length === 0) {
+    throw new Error('Không tìm thấy buổi thi nào trong nội dung đã dán.')
+  }
+
+  return parseExamRows(rows)
+}
+
 export function parseExamRows(rows: ExamRow[]): ParsedSchedule {
   for (const column of EXAM_REQUIRED_COLUMNS) {
     if (!(column in rows[0])) {
