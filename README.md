@@ -8,7 +8,7 @@ This is a frontend-only project (React + Vite + TypeScript) with no backend — 
 
 - Sign in with Google, upload the schedule Excel file, and push the whole semester onto your calendar in one click.
 - Choose how many minutes before each class you want to be reminded (e.g. 45 minutes).
-- Creates a dedicated Google Calendar (named `HK-<semester code>`, e.g. `HK-20261`) and pushes every session into it — kept separate from your personal calendar.
+- Creates a dedicated Google Calendar (named `HK-<semester code>`, e.g. `HK-20261`) and pushes every session into it — kept separate from your personal calendar. The **Học kỳ** field is pre-filled from the file's earliest date; you type only the 5-digit code (e.g. `20261`) and the app builds the calendar name itself. Running again with the same code reuses the same calendar.
 - Each subject gets its own color.
 - Shows live progress as events are created.
 - Running it again with the same data won't create duplicate events.
@@ -27,6 +27,12 @@ The same upload box also accepts the exam schedule Excel file (columns: `Mã MH`
 - Each exam becomes one event titled `[Thi] <subject> (<code>)`, located at `Phòng thi`.
 - The file has no end time, so every exam is created as 90 minutes long (`EXAM_DURATION_MINUTES` in `src/lib/parseExamExcel.ts`).
 - Exams go into a separate calendar named `HK-<semester code>-Thi` (e.g. `HK-20261-Thi`).
+
+#### Paste instead of exporting Excel
+
+You can skip the Excel export for both the exam schedule and the class timetable: open the **Xem lịch thi** or **Thời khóa biểu dạng học kỳ** page, press Ctrl+A then Ctrl+C, and paste it into the **Dán nội dung** tab. The copied page text is tab-separated, so the app finds the table header, reads each row by column name (`parseScheduleText` in `src/lib/parseScheduleExcel.ts`, which picks the exam or timetable reader automatically) and ignores the menu and statistics around the table. The rest of the flow is identical to the Excel upload, and the generated session ids are the same, so pasting and uploading the same schedule never creates duplicates.
+
+On the timetable page the portal only shows the first five columns (`Mã MH`, `Tên môn học`, `Nhóm tổ`, `Số tín chỉ`, `Lớp`) on a subject's first row; the later rows of that subject have just the remaining 7 cells. The app re-attaches those five columns from the previous full row. Subjects with no timetable (0 periods, no dates, e.g. `Tiếng Anh đầu khóa`) are skipped, for pasted text and Excel files alike.
 
 > This file is only ever processed in your browser — it's never sent anywhere except the Google Calendar API.
 

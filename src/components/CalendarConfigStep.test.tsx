@@ -67,10 +67,12 @@ afterEach(() => {
 })
 
 describe('CalendarConfigStep', () => {
-  it('điền sẵn tên calendar theo học kỳ và nhắc trước mặc định 45 phút', () => {
+  it('điền sẵn mã học kỳ, hiện tên calendar sẽ dùng và nhắc trước mặc định 45 phút', () => {
     render(<CalendarConfigStep schedule={schedule} onBack={vi.fn()} />)
 
-    expect(screen.getByLabelText(/tên calendar/i)).toHaveValue('HK-20261')
+    expect(screen.getByLabelText(/học kỳ/i)).toHaveValue('20261')
+    expect(screen.getByText(/calendar sẽ là/i)).toHaveTextContent('Calendar sẽ là: HK-20261')
+    expect(screen.queryByLabelText(/tên calendar/i)).not.toBeInTheDocument()
     expect(screen.getByLabelText(/nhắc trước/i)).toHaveValue(45)
     expect(screen.getByText('Nhập môn kiểm thử')).toBeInTheDocument()
     expect(screen.getByText('Phát triển phần mềm')).toBeInTheDocument()
@@ -92,7 +94,8 @@ describe('CalendarConfigStep', () => {
     }
     render(<CalendarConfigStep schedule={examSchedule} onBack={vi.fn()} />)
 
-    expect(screen.getByLabelText(/tên calendar/i)).toHaveValue('HK-20261-Thi')
+    expect(screen.getByLabelText(/học kỳ/i)).toHaveValue('20261')
+    expect(screen.getByText(/calendar sẽ là/i)).toHaveTextContent('Calendar sẽ là: HK-20261-Thi')
     expect(screen.getByText(/sẽ tạo 1 buổi thi/i)).toHaveTextContent(
       'Sẽ tạo 1 buổi thi, từ 08/09/2025 đến 08/09/2025.',
     )
@@ -132,13 +135,65 @@ describe('CalendarConfigStep', () => {
     expect(screen.getByText('Nhập môn kiểm thử').style.backgroundColor).not.toBe('rgb(214, 0, 0)')
   })
 
-  it('báo lỗi khi tên calendar rỗng', () => {
+  it('cập nhật tên calendar ngay khi sửa mã học kỳ', () => {
     render(<CalendarConfigStep schedule={schedule} onBack={vi.fn()} />)
 
-    fireEvent.change(screen.getByLabelText(/tên calendar/i), { target: { value: '  ' } })
+    fireEvent.change(screen.getByLabelText(/học kỳ/i), { target: { value: '20252' } })
+
+    expect(screen.getByText(/calendar sẽ là/i)).toHaveTextContent('Calendar sẽ là: HK-20252')
+  })
+
+  it.each(['', '  ', 'abc', '2026', '202611', '2026a'])(
+    'báo lỗi khi mã học kỳ không hợp lệ: "%s"',
+    (value) => {
+      render(<CalendarConfigStep schedule={schedule} onBack={vi.fn()} />)
+
+      fireEvent.change(screen.getByLabelText(/học kỳ/i), { target: { value } })
+      fireEvent.click(screen.getByRole('button', { name: /xác nhận tạo lịch/i }))
+
+      expect(screen.getByRole('alert')).toHaveTextContent('Học kỳ gồm 5 chữ số')
+      expect(requestGoogleAccessToken).not.toHaveBeenCalled()
+    },
+  )
+
+  it('dùng mã học kỳ đã sửa (bỏ khoảng trắng thừa) để tìm calendar', async () => {
+    vi.mocked(requestGoogleAccessToken).mockResolvedValue('token-abc')
+    vi.mocked(ensureCalendar).mockResolvedValue('cal-1')
+    vi.mocked(pushSessionsToGoogleCalendar).mockResolvedValue({
+      total: 2,
+      created: 2,
+      skipped: 0,
+      failed: 0,
+    })
+    render(<CalendarConfigStep schedule={schedule} onBack={vi.fn()} clientId="test-client-id" />)
+
+    fireEvent.change(screen.getByLabelText(/học kỳ/i), { target: { value: ' 20252 ' } })
     fireEvent.click(screen.getByRole('button', { name: /xác nhận tạo lịch/i }))
 
-    expect(screen.getByRole('alert')).toHaveTextContent('tên calendar')
+    await vi.waitFor(() => expect(ensureCalendar).toHaveBeenCalledWith('token-abc', 'HK-20252'))
+  })
+
+  it('với lịch thi: tạo calendar HK-<học kỳ>-Thi', async () => {
+    vi.mocked(requestGoogleAccessToken).mockResolvedValue('token-abc')
+    vi.mocked(ensureCalendar).mockResolvedValue('cal-1')
+    vi.mocked(pushSessionsToGoogleCalendar).mockResolvedValue({
+      total: 1,
+      created: 1,
+      skipped: 0,
+      failed: 0,
+    })
+    const examSchedule: ParsedSchedule = {
+      kind: 'exam',
+      semester: '20261',
+      sessions: [{ ...schedule.sessions[0], kind: 'exam' }],
+    }
+    render(
+      <CalendarConfigStep schedule={examSchedule} onBack={vi.fn()} clientId="test-client-id" />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /xác nhận tạo lịch/i }))
+
+    await vi.waitFor(() => expect(ensureCalendar).toHaveBeenCalledWith('token-abc', 'HK-20261-Thi'))
   })
 
   it('báo lỗi khi số phút nhắc vượt giới hạn', () => {
